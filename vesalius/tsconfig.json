@@ -1,6 +1,32 @@
 {
   "extends": "expo/tsconfig.base",
   "compilerOptions": {
-    "strict": true
-  }
+    "strict": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@app/*": [
+        "src/app/*"
+      ],
+      "@design/*": [
+        "src/components/design/*"
+      ],
+      "@functional/*": [
+        "src/components/functional/*"
+      ],
+      "@core/*": [
+        "src/core/*"
+      ],
+      "@style/*": [
+        "src/style/*"
+      ],
+      "@assets/*": [
+        "assets/*"
+      ]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ]
 }
