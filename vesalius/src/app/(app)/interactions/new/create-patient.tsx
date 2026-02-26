@@ -1,9 +1,19 @@
-import { View, Text } from "react-native";
+import { router } from "expo-router";
+import CreatePatientScreen from "@design/screens/CreatePatientScreen";
 
-export default function CreatePatient() {
+export default function CreatePatientRoute() {
   return (
-    <View>
-      <Text>Create Patient</Text>
-    </View>
+    <CreatePatientScreen
+      onCancel={() => router.back()}
+      onSavePatient={(patient) => {
+        router.replace({
+          pathname: "/(app)/(tabs)/record",
+          params: {
+            selectedPatientId: patient.id,
+            selectedPatientName: patient.name,
+          },
+        });
+      }}
+    />
   );
 }

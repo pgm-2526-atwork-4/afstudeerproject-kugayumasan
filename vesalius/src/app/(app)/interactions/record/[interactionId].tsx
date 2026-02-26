@@ -1,12 +1,29 @@
-import { View, Text } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
+import RecordingScreen from "@design/screens/RecordingScreen";
 
-export default function RecordInteraction() {
-  const { interactionId } = useLocalSearchParams();
+export default function InteractionRecording() {
+  const { interactionId } = useLocalSearchParams<{
+    interactionId: string;
+  }>();
 
   return (
-    <View>
-      <Text>Record interaction {interactionId}</Text>
-    </View>
+    <RecordingScreen
+      patientName={
+        interactionId === "anonymous"
+          ? "Anonieme patiënt"
+          : "Geselecteerde patiënt"
+      }
+      onBack={() => {
+        router.back();
+      }}
+      onStopRecording={() => {
+        // later: audio stoppen + upload starten
+        // temp: simulate success -> go to feedback
+        router.replace({
+          pathname: `/(app)/interactions/feedback/${interactionId}`,
+          params: { status: "success" }, // change to "error" to test
+        });
+      }}
+    />
   );
 }
