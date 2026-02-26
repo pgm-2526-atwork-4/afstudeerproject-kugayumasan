@@ -1,9 +1,13 @@
-import { View, Text } from "react-native";
+import { router } from "expo-router";
+import SettingsScreen from "@design/screens/SettingsScreen";
 
 export default function Settings() {
   return (
-    <View>
-      <Text>Settings</Text>
-    </View>
+    <SettingsScreen
+      onLogout={() => {
+        // later: auth cleanup (tokens, state, etc.)
+        router.replace("/(auth)/login");
+      }}
+    />
   );
 }

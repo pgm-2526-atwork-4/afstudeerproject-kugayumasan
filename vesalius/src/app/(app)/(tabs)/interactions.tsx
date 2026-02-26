@@ -1,9 +1,10 @@
-import { View, Text } from "react-native";
+import { Text } from "react-native";
+import Screen from "@design/ui/ScreenLayout";
 
 export default function Interactions() {
   return (
-    <View>
+    <Screen>
       <Text>Interactions</Text>
-    </View>
+    </Screen>
   );
 }
