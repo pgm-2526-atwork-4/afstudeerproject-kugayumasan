@@ -1,10 +1,16 @@
-import { Text } from "react-native";
-import Screen from "@design/ui/ScreenLayout";
+import React from "react";
+import { router } from "expo-router";
+import InteractionsScreen from "@design/screens/InteractionsScreen";
 
-export default function Interactions() {
+export default function InteractionsTab() {
   return (
-    <Screen>
-      <Text>Interactions</Text>
-    </Screen>
+    <InteractionsScreen
+      onNewInteraction={() => {
+        router.push("/(app)/interactions/new");
+      }}
+      onViewInteraction={(id) => {
+        router.push(`/(app)/interactions/${id}`);
+      }}
+    />
   );
 }
