@@ -13,6 +13,8 @@ import {
 
 type Props = {
   onLogout: () => void;
+  profileName?: string; 
+  profileEmail?: string; 
 };
 
 type Option = { label: string; value: string };
@@ -81,7 +83,6 @@ function InlineSelect({
           {value ? getLabel(value, options) : placeholder}
         </Text>
 
-        {/* Chevron (no transform on icon itself) */}
         <View
           style={[
             styles.select__chevronWrap,
@@ -142,9 +143,12 @@ function InlineSelect({
   );
 }
 
-/* ---------- Screen ---------- */
 
-export default function SettingsScreen({ onLogout }: Props) {
+export default function SettingsScreen({
+  onLogout,
+  profileName,
+  profileEmail,
+}: Props) {
   const [language, setLanguage] = useState("nl");
   const [organization, setOrganization] = useState("metro-hospital");
   const [openSelect, setOpenSelect] = useState<null | "language" | "org">(null);
@@ -169,8 +173,9 @@ export default function SettingsScreen({ onLogout }: Props) {
           </View>
 
           <View style={{ flex: 1 }}>
-            <Text style={styles.name}>Dr. James Chen</Text>
-            <Text style={styles.email}>james.chen@vesalius.ai</Text>
+            {/* ✅ dynamic */}
+            <Text style={styles.name}>{profileName ?? "—"}</Text>
+            <Text style={styles.email}>{profileEmail ?? "—"}</Text>
           </View>
         </View>
 
@@ -328,7 +333,6 @@ const styles = StyleSheet.create({
     borderTopColor: COLORS.border,
   },
 
-  /* inline select */
   select__control: {
     height: 44,
     borderWidth: 1,
@@ -346,7 +350,6 @@ const styles = StyleSheet.create({
   select__text: { fontSize: 12, color: COLORS.text },
   select__placeholder: { color: "#9AA4B2" },
 
-  /* chevron fix */
   select__chevronWrap: { opacity: 0.6 },
   select__chevronWrapOpen: { transform: [{ rotate: "180deg" }], opacity: 0.85 },
   select__chevronIcon: {},
