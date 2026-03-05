@@ -5,7 +5,9 @@ import { Button } from "@design/ui/button";
 import { Activity } from "lucide-react-native";
 
 type Props = {
-  onLogin: () => void;
+  onLogin: (username: string, password: string) => void | Promise<void>;
+  loading?: boolean;
+  error?: string | null;
 };
 
 const COLORS = {
@@ -16,12 +18,13 @@ const COLORS = {
   white: "#FFFFFF",
 };
 
-export default function LoginScreen({ onLogin }: Props) {
+export default function LoginScreen({ onLogin, loading, error }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const handleLogin = () => {
-    onLogin();
+    if (!username || !password) return;
+    onLogin(username, password);
   };
 
   return (
@@ -29,7 +32,7 @@ export default function LoginScreen({ onLogin }: Props) {
       <View style={styles.login}>
         {/* Center content */}
         <View style={styles.login__content}>
-          {/* Logo + title */}
+          {/* Logo */}
           <View style={styles.login__brandRow}>
             <View style={styles.login__logo}>
               <Activity size={28} strokeWidth={2} color={COLORS.white} />
@@ -50,6 +53,7 @@ export default function LoginScreen({ onLogin }: Props) {
                 placeholderTextColor="#9AA4B2"
                 style={styles.login__input}
                 autoCapitalize="none"
+                editable={!loading}
               />
             </View>
 
@@ -62,10 +66,11 @@ export default function LoginScreen({ onLogin }: Props) {
                 placeholderTextColor="#9AA4B2"
                 style={styles.login__input}
                 secureTextEntry
+                editable={!loading}
               />
             </View>
 
-            {/* Forgot links */}
+            {/* Links */}
             <View style={styles.login__links}>
               <Pressable onPress={() => {}}>
                 <Text style={styles.login__link}>Gebruikersnaam vergeten?</Text>
@@ -75,21 +80,17 @@ export default function LoginScreen({ onLogin }: Props) {
               </Pressable>
             </View>
 
-            {/* Buttons */}
+            {/* Error */}
+            {error ? <Text style={styles.login__error}>{error}</Text> : null}
+
+            {/* Button */}
             <View style={styles.login__buttons}>
               <Button
                 onPress={handleLogin}
+                disabled={loading}
                 style={styles.login__primaryBtn}
                 textStyle={styles.login__primaryText}
-                title="Aanmelden"
-              />
-
-              <Button
-                variant="outline"
-                onPress={handleLogin}
-                style={styles.login__secondaryBtn}
-                textStyle={styles.login__secondaryText}
-                title="Aanmelden zonder wachtwoord"
+                title={loading ? "Bezig..." : "Aanmelden"}
               />
             </View>
           </View>
@@ -185,6 +186,7 @@ const styles = StyleSheet.create({
     gap: 12,
     marginTop: 12,
   },
+
   login__primaryBtn: {
     width: "100%",
     height: 48,
@@ -196,15 +198,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "600",
   },
-  login__secondaryBtn: {
-    width: "100%",
-    height: 48,
-    borderRadius: 15,
-  },
-  login__secondaryText: {
-    color: COLORS.text,
-    fontSize: 14,
-    fontWeight: "500",
+
+  login__error: {
+    color: "#F50C0C",
+    fontSize: 12,
   },
 
   login__footer: {
