@@ -1,8 +1,8 @@
+// src/core/modules/session/session.bootstrap.ts
 import { authService } from "@core/modules/auth/auth.service";
 import { userService } from "@core/modules/user/user.service";
 import { clearTokens } from "@core/modules/auth/auth.storage";
 import {
-  saveMe,
   saveSelectedInstitutionId,
   saveDoctorId,
   clearSession,
@@ -27,10 +27,9 @@ export async function bootstrapSession(): Promise<
 
   // Fetch /users/me (http wrapper handles Bearer + refresh on 401)
   const me = await userService.getMe();
-  await saveMe(me);
 
   const doctorId = me.doctor?.id ?? null;
-  if (doctorId) await saveDoctorId(doctorId);
+  await saveDoctorId(doctorId);
 
   // Institution selection:
   const storedInstitutionId = await getSelectedInstitutionId();
@@ -41,9 +40,7 @@ export async function bootstrapSession(): Promise<
       ? storedInstitutionId
       : (me.institutions?.[0]?.id ?? null);
 
-  if (selectedInstitutionId) {
-    await saveSelectedInstitutionId(selectedInstitutionId);
-  }
+  await saveSelectedInstitutionId(selectedInstitutionId);
 
   return { me, selectedInstitutionId, doctorId };
 }
