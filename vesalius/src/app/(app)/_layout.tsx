@@ -1,14 +1,15 @@
 import { Stack } from "expo-router";
-import { SessionProvider } from "@core/modules/session/session.context";
 
-export default function RootLayout() {
+export default function AppLayout() {
   return (
-    <SessionProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(app)" />
-      </Stack>
-    </SessionProvider>
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="index" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="interactions/[interactionId]" />
+      <Stack.Screen name="interactions/new/index" />
+      <Stack.Screen name="interactions/new/create-patient" />
+      <Stack.Screen name="interactions/record/[interactionId]" />
+      <Stack.Screen name="interactions/feedback/[interactionId]" />
+    </Stack>
   );
 }
