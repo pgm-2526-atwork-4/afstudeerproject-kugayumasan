@@ -1,13 +1,5 @@
-import { router } from "expo-router";
-import SettingsScreen from "@design/screens/SettingsScreen";
+import SettingsContainer from "@functional/settings/SettingsContainer";
 
-export default function Settings() {
-  return (
-    <SettingsScreen
-      onLogout={() => {
-        // later: auth cleanup (tokens, state, etc.)
-        router.replace("/(auth)/login");
-      }}
-    />
-  );
+export default function SettingsPage() {
+  return <SettingsContainer />;
 }
