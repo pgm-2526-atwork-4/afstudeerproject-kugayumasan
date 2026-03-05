@@ -20,14 +20,20 @@ export default function LoginContainer() {
     setLoading(true);
 
     try {
+      // 1) Keycloak login -> tokens stored
       await authService.login(username, password);
 
+      // 2) Bootstrap -> fetch /users/me + select institution + store doctor/institution IDs
       const { me, selectedInstitutionId, doctorId } = await bootstrapSession();
+
+      // 3) Put in memory session state
       setSession({ me, selectedInstitutionId, doctorId });
       setHydrated(true);
 
+      // 4) Go to app
       router.replace("/(app)");
     } catch (e: any) {
+      // Clear everything (tokens + session IDs)
       await clearAllSession();
       setSession({ me: null, selectedInstitutionId: null, doctorId: null });
       setHydrated(true);
