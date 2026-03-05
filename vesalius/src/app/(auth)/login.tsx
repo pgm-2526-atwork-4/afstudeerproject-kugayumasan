@@ -1,9 +1,6 @@
-import { View, Text } from "react-native";
+import React from "react";
+import LoginContainer from "@functional/auth/LoginContainer";
 
-export default function Login() {
-  return (
-    <View>
-      <Text>Login</Text>
-    </View>
-  );
+export default function LoginRoute() {
+  return <LoginContainer />;
 }
