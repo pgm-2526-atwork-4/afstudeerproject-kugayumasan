@@ -20,33 +20,37 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   });
 
   const value = useMemo<SessionContextValue>(() => {
+    async function logout() {
+      await clearTokens();
+      await clearSessionStorage();
+
+      setState({
+        me: null,
+        selectedInstitutionId: null,
+        doctorId: null,
+        isHydrated: true,
+      });
+    }
+
+    function setSession(next: Partial<Omit<SessionState, "isHydrated">>) {
+      setState((prev) => ({
+        ...prev,
+        ...next,
+      }));
+    }
+
+    function setHydrated(v: boolean) {
+      setState((prev) => ({
+        ...prev,
+        isHydrated: v,
+      }));
+    }
+
     return {
       ...state,
-
-      setSession: (next) => {
-        setState((prev) => ({
-          ...prev,
-          ...next, // ✅ comma fixed by proper object syntax
-        }));
-      },
-
-      setHydrated: (v) => {
-        setState((prev) => ({
-          ...prev,
-          isHydrated: v,
-        }));
-      },
-
-      logout: async () => {
-        await clearTokens();
-        await clearSessionStorage();
-        setState({
-          me: null,
-          selectedInstitutionId: null,
-          doctorId: null,
-          isHydrated: true,
-        });
-      },
+      setSession,
+      setHydrated,
+      logout,
     };
   }, [state]);
 
