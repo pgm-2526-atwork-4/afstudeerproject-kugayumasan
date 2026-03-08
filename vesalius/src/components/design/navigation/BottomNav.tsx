@@ -3,6 +3,9 @@ import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Home, Mic, FileText, Settings } from "lucide-react-native";
 
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+
 export type TabId = "home" | "record" | "interactions" | "settings";
 
 interface BottomNavProps {
@@ -10,116 +13,55 @@ interface BottomNavProps {
   onTabChange: (tab: TabId) => void;
 }
 
+const TABS = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "record", label: "Opname", icon: Mic },
+  { id: "interactions", label: "Interacties", icon: FileText },
+  { id: "settings", label: "Instellingen", icon: Settings },
+] as const;
+
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
   return (
     <SafeAreaView edges={["bottom"]} style={styles.bottomNav}>
       <View style={styles.bottomNav__inner}>
-        {/* Home */}
-        <Pressable
-          onPress={() => onTabChange("home")}
-          style={styles.bottomNav__tab}
-        >
-          <Home
-            size={24}
-            strokeWidth={1.5}
-            color={activeTab === "home" ? COLORS.primary : COLORS.text}
-            style={{ opacity: activeTab === "home" ? 1 : 0.7 }}
-          />
-          <Text
-            style={[
-              styles.bottomNav__label,
-              activeTab === "home"
-                ? styles["bottomNav__label--active"]
-                : styles["bottomNav__label--inactive"],
-            ]}
-          >
-            Home
-          </Text>
-        </Pressable>
+        {TABS.map((tab) => {
+          const Icon = tab.icon;
+          const active = activeTab === tab.id;
 
-        {/* Record */}
-        <Pressable
-          onPress={() => onTabChange("record")}
-          style={styles.bottomNav__tab}
-        >
-          <Mic
-            size={24}
-            strokeWidth={1.5}
-            color={activeTab === "record" ? COLORS.primary : COLORS.text}
-            style={{ opacity: activeTab === "record" ? 1 : 0.7 }}
-          />
-          <Text
-            style={[
-              styles.bottomNav__label,
-              activeTab === "record"
-                ? styles["bottomNav__label--active"]
-                : styles["bottomNav__label--inactive"],
-            ]}
-          >
-            Opname
-          </Text>
-        </Pressable>
+          return (
+            <Pressable
+              key={tab.id}
+              onPress={() => onTabChange(tab.id as TabId)}
+              style={styles.bottomNav__tab}
+            >
+              <Icon
+                size={24}
+                strokeWidth={1.5}
+                color={active ? COLORS.primary : COLORS.text}
+                style={{ opacity: active ? 1 : 0.7 }}
+              />
 
-        {/* Interactions */}
-        <Pressable
-          onPress={() => onTabChange("interactions")}
-          style={styles.bottomNav__tab}
-        >
-          <FileText
-            size={24}
-            strokeWidth={1.5}
-            color={activeTab === "interactions" ? COLORS.primary : COLORS.text}
-            style={{ opacity: activeTab === "interactions" ? 1 : 0.7 }}
-          />
-          <Text
-            style={[
-              styles.bottomNav__label,
-              activeTab === "interactions"
-                ? styles["bottomNav__label--active"]
-                : styles["bottomNav__label--inactive"],
-            ]}
-          >
-            Interacties
-          </Text>
-        </Pressable>
-
-        {/* Settings */}
-        <Pressable
-          onPress={() => onTabChange("settings")}
-          style={styles.bottomNav__tab}
-        >
-          <Settings
-            size={24}
-            strokeWidth={1.5}
-            color={activeTab === "settings" ? COLORS.primary : COLORS.text}
-            style={{ opacity: activeTab === "settings" ? 1 : 0.7 }}
-          />
-          <Text
-            style={[
-              styles.bottomNav__label,
-              activeTab === "settings"
-                ? styles["bottomNav__label--active"]
-                : styles["bottomNav__label--inactive"],
-            ]}
-          >
-            Instellingen
-          </Text>
-        </Pressable>
+              <Text
+                style={[
+                  styles.bottomNav__label,
+                  active
+                    ? styles.bottomNav__labelActive
+                    : styles.bottomNav__labelInactive,
+                ]}
+              >
+                {tab.label}
+              </Text>
+            </Pressable>
+          );
+        })}
       </View>
     </SafeAreaView>
   );
 }
 
-const COLORS = {
-  primary: "#20BBC0",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-};
-
 const styles = StyleSheet.create({
   bottomNav: {
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background.white,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
@@ -136,20 +78,20 @@ const styles = StyleSheet.create({
     height: "100%",
     alignItems: "center",
     justifyContent: "center",
-    gap: 4,
+    gap: SPACING.xs,
   },
 
   bottomNav__label: {
     fontSize: 10,
   },
 
-  "bottomNav__label--active": {
+  bottomNav__labelActive: {
     color: COLORS.primary,
     fontWeight: "500",
     opacity: 1,
   },
 
-  "bottomNav__label--inactive": {
+  bottomNav__labelInactive: {
     color: COLORS.text,
     fontWeight: "400",
     opacity: 0.7,
