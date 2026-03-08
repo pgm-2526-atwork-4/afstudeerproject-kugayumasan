@@ -1,20 +1,18 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { ChevronDown, ChevronUp } from "lucide-react-native";
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+import { RADIUS } from "@style/radius";
+import LoadingCard from "@design/ui/LoadingCard";
+import EmptyState from "@design/ui/EmptyState";
+import Card from "@design/ui/Card";
 
 type Props = {
   title?: string;
   transcript?: string | null;
   defaultCollapsed?: boolean;
   isLoading?: boolean;
-};
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
 };
 
 export default function TranscriptCollapse({
@@ -43,24 +41,15 @@ export default function TranscriptCollapse({
       </Pressable>
 
       {expanded ? (
-        <View style={{ marginTop: 12 }}>
+        <View style={styles.contentWrap}>
           {isLoading || transcript == null ? (
-            <View style={styles.loadingCard}>
-              <Text style={styles.loadingIcon}>⟳</Text>
-              <Text style={styles.loadingText}>
-                Transcript wordt gegenereerd...
-              </Text>
-            </View>
+            <LoadingCard text="Transcript wordt gegenereerd..." />
           ) : transcript.trim().length > 0 ? (
-            <View style={styles.card}>
+            <Card style={styles.card}>
               <Text style={styles.body}>{transcript}</Text>
-            </View>
+            </Card>
           ) : (
-            <View style={styles.loadingCard}>
-              <Text style={styles.loadingText}>
-                Geen transcript beschikbaar.
-              </Text>
-            </View>
+            <EmptyState text="Geen transcript beschikbaar." />
           )}
         </View>
       ) : null}
@@ -84,39 +73,17 @@ const styles = StyleSheet.create({
     color: COLORS.text,
   },
 
+  contentWrap: {
+    marginTop: SPACING.md,
+  },
+
   card: {
-    backgroundColor: COLORS.white,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    padding: 16,
+    borderRadius: RADIUS.md,
+    padding: SPACING.lg,
   },
   body: {
     fontSize: 12,
     color: COLORS.text,
     lineHeight: 20,
-  },
-
-  loadingCard: {
-    backgroundColor: COLORS.bgTint,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  loadingIcon: {
-    fontSize: 22,
-    color: COLORS.primary,
-    opacity: 0.9,
-  },
-  loadingText: {
-    fontSize: 12,
-    color: COLORS.text,
-    opacity: 0.6,
-    textAlign: "center",
   },
 });

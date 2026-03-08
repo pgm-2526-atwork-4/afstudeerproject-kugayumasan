@@ -1,56 +1,19 @@
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+import LoadingCard from "@design/ui/LoadingCard";
+import Card from "@design/ui/Card";
+import {
+  tokenizeSummary,
+  SummaryToken,
+} from "@functional/interactions/summary.helpers";
 
 type Props = {
   summary?: string | null;
   isLoading?: boolean;
   variant?: "summary" | "loading";
 };
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-};
-
-type Token =
-  | { type: "h3"; text: string }
-  | { type: "bullet"; text: string }
-  | { type: "p"; text: string }
-  | { type: "spacer" };
-
-function tokenize(text: string): Token[] {
-  const lines = text.split("\n");
-  const out: Token[] = [];
-
-  for (const raw of lines) {
-    const line = raw.trimEnd();
-
-    if (line.trim().length === 0) {
-      out.push({ type: "spacer" });
-      continue;
-    }
-
-    // **Header**
-    if (line.startsWith("**") && line.includes("**", 2)) {
-      const match = line.match(/\*\*(.*?)\*\*/);
-      const headerText = match?.[1]?.trim();
-      if (headerText) out.push({ type: "h3", text: headerText });
-      continue;
-    }
-
-    // - bullet
-    if (line.trimStart().startsWith("- ")) {
-      out.push({ type: "bullet", text: line.trimStart().slice(2) });
-      continue;
-    }
-
-    out.push({ type: "p", text: line });
-  }
-
-  return out;
-}
 
 export default function SummaryBlock({
   summary,
@@ -59,30 +22,22 @@ export default function SummaryBlock({
 }: Props) {
   const tokens = useMemo(() => {
     const s = summary ?? "";
-    return tokenize(s);
+    return tokenizeSummary(s);
   }, [summary]);
 
-  // Loading card like Figma (tint bg + border)
   if (isLoading || variant === "loading") {
-    return (
-      <View style={styles.loadingCard}>
-        <Text style={styles.loadingIcon}>⟳</Text>
-        <Text style={styles.loadingText}>
-          Samenvatting wordt gegenereerd...
-        </Text>
-      </View>
-    );
+    return <LoadingCard text="Samenvatting wordt gegenereerd..." />;
   }
 
-  // Summary card (bgTint + teal border/30)
   return (
-    <View style={styles.summaryCard}>
+    <Card variant="tint" style={styles.summaryCard}>
       {tokens.length === 0 ? (
         <Text style={styles.muted}>Nog geen samenvatting.</Text>
       ) : (
-        tokens.map((t, idx) => {
-          if (t.type === "spacer")
-            return <View key={idx} style={{ height: 8 }} />;
+        tokens.map((t: SummaryToken, idx) => {
+          if (t.type === "spacer") {
+            return <View key={idx} style={{ height: SPACING.sm }} />;
+          }
 
           if (t.type === "h3") {
             return (
@@ -108,54 +63,29 @@ export default function SummaryBlock({
           );
         })
       )}
-    </View>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   summaryCard: {
-    backgroundColor: COLORS.bgTint,
-    borderWidth: 1,
-    borderColor: "rgba(32, 187, 192, 0.3)", // #20BBC0 / 30%
-    borderRadius: 15,
-    padding: 16,
-    gap: 6,
-  },
-
-  loadingCard: {
-    backgroundColor: COLORS.bgTint,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    paddingVertical: 24,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 10,
-  },
-  loadingIcon: {
-    fontSize: 22,
-    color: COLORS.primary,
-    opacity: 0.9,
-  },
-  loadingText: {
-    fontSize: 12,
-    color: COLORS.text,
-    opacity: 0.6,
-    textAlign: "center",
+    borderColor: "rgba(32, 187, 192, 0.3)",
+    gap: SPACING.xs,
   },
 
   h3: {
     fontSize: 14,
     fontWeight: "500",
     color: COLORS.text,
-    marginTop: 10,
+    marginTop: SPACING.sm,
   },
+
   p: {
     fontSize: 14,
     color: COLORS.text,
-    lineHeight: 24, // ~1.7
+    lineHeight: 24,
   },
+
   muted: {
     fontSize: 12,
     color: COLORS.text,
@@ -164,9 +94,10 @@ const styles = StyleSheet.create({
 
   bulletRow: {
     flexDirection: "row",
-    gap: 8,
+    gap: SPACING.sm,
     alignItems: "flex-start",
   },
+
   bulletDot: {
     fontSize: 14,
     lineHeight: 24,
