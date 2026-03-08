@@ -1,9 +1,6 @@
-import { View, Text } from "react-native";
+import React from "react";
+import CreateInteractionContainer from "@functional/interactions/CreateInteractionContainer";
 
-export default function NewInteraction() {
-  return (
-    <View>
-      <Text>New Interaction</Text>
-    </View>
-  );
+export default function NewInteractionRoute() {
+  return <CreateInteractionContainer />;
 }
