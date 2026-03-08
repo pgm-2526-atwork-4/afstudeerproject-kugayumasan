@@ -10,89 +10,77 @@ import {
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
 import { Search, Plus, User, X } from "lucide-react-native";
+import type { Patient } from "@core/modules/patients/patients.types";
 
-type Patient = {
-  id: string;
-  name: string;
-  nrn: string;
-};
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+import { RADIUS } from "@style/radius";
+
+import LoadingCard from "@design/ui/LoadingCard";
+import EmptyState from "@design/ui/EmptyState";
+import ScreenHeader from "@design/ui/ScreenHeader";
+import SectionHeader from "@design/ui/SectionHeader";
+import PatientRow from "@design/patients/PatientRow";
+
+import {
+  getPatientName,
+  getPatientSubtitle,
+} from "@functional/patients/patient.helpers";
 
 type Props = {
-  initialSelectedPatient?: { id: string; name: string } | null;
-  onStartRecording: (patientName: string, isAnonymous: boolean) => void;
+  initialSelectedPatient?: Patient | null;
+  patients?: Patient[];
+  isLoading?: boolean;
+  error?: string | null;
+  onSearchPatients?: (query: string) => void;
+  onStartRecording: (patient: Patient | null, isAnonymous: boolean) => void;
   onBack: () => void;
   onCreatePatient: () => void;
 };
 
-const mockPatients: Patient[] = [
-  { id: "1", name: "Maria Rodriguez", nrn: "85.03.15-123.45" },
-  { id: "2", name: "John Smith", nrn: "90.07.22-234.56" },
-  { id: "3", name: "Sarah Williams", nrn: "88.11.30-345.67" },
-  { id: "4", name: "Michael Johnson", nrn: "92.05.18-456.78" },
-  { id: "5", name: "Emma Davis", nrn: "95.09.25-567.89" },
-];
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-  danger: "#E5484D",
-  dangerBg: "#FDECEC",
-};
-
 export default function CreateInteractionScreen({
   initialSelectedPatient = null,
+  patients = [],
+  isLoading = false,
+  error = null,
+  onSearchPatients = () => {},
   onStartRecording,
   onBack,
   onCreatePatient,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(
-    initialSelectedPatient
-      ? {
-          id: initialSelectedPatient.id,
-          name: initialSelectedPatient.name,
-          nrn: "",
-        }
-      : null,
+    initialSelectedPatient,
   );
 
-  const filteredPatients = useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
-    return mockPatients.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) || p.nrn.includes(searchQuery.trim()),
-    );
-  }, [searchQuery]);
+  const showResults = useMemo(() => {
+    return !selectedPatient && searchQuery.trim().length > 0;
+  }, [selectedPatient, searchQuery]);
 
   return (
     <Screen>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Nieuwe interactie</Text>
-      </View>
+      <ScreenHeader title="Nieuwe interactie" />
 
-      {/* Content */}
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.section}>
-          <Text style={styles.label}>
-            Zoek een patiënt of voeg een nieuwe toe
-          </Text>
+          <SectionHeader title="Zoek een patiënt of voeg een nieuwe toe" />
 
           {selectedPatient ? (
             <View style={styles.selectedPatient}>
               <User size={18} color={COLORS.primary} strokeWidth={1.5} />
+
               <View style={{ flex: 1 }}>
-                <Text style={styles.patientName}>{selectedPatient.name}</Text>
-                {selectedPatient.nrn ? (
-                  <Text style={styles.patientNrn}>{selectedPatient.nrn}</Text>
-                ) : null}
+                <Text style={styles.patientName}>
+                  {getPatientName(selectedPatient) || "Onbekende patiënt"}
+                </Text>
+
+                <Text style={styles.patientNrn}>
+                  {getPatientSubtitle(selectedPatient)}
+                </Text>
               </View>
 
               <Pressable
@@ -111,48 +99,39 @@ export default function CreateInteractionScreen({
                   strokeWidth={1.5}
                   style={{ opacity: 0.7 }}
                 />
+
                 <TextInput
                   value={searchQuery}
-                  onChangeText={setSearchQuery}
+                  onChangeText={(value) => {
+                    setSearchQuery(value);
+                    onSearchPatients(value);
+                  }}
                   placeholder="Patiënt zoeken..."
-                  placeholderTextColor="#9AA4B2"
+                  placeholderTextColor={COLORS.placeholder}
                   style={styles.searchInput}
                 />
               </View>
 
-              {searchQuery.length > 0 ? (
+              {showResults ? (
                 <View style={styles.list}>
-                  {filteredPatients.length > 0 ? (
-                    filteredPatients.map((p, idx) => (
-                      <Pressable
+                  {isLoading ? (
+                    <LoadingCard text="Patiënten laden..." />
+                  ) : error ? (
+                    <EmptyState text={error} />
+                  ) : patients.length > 0 ? (
+                    patients.map((p, idx) => (
+                      <PatientRow
                         key={p.id}
-                        onPress={() => {
-                          setSelectedPatient(p);
+                        patient={p}
+                        isLast={idx === patients.length - 1}
+                        onPress={(patient) => {
+                          setSelectedPatient(patient);
                           setSearchQuery("");
                         }}
-                        style={[
-                          styles.listItem,
-                          idx === filteredPatients.length - 1
-                            ? styles.listItem__last
-                            : null,
-                        ]}
-                      >
-                        <User
-                          size={18}
-                          color={COLORS.text}
-                          strokeWidth={1.5}
-                          style={{ opacity: 0.4 }}
-                        />
-                        <View>
-                          <Text style={styles.patientName}>{p.name}</Text>
-                          <Text style={styles.patientNrn}>{p.nrn}</Text>
-                        </View>
-                      </Pressable>
+                      />
                     ))
                   ) : (
-                    <Text style={styles.emptyText}>
-                      Geen patiënten gevonden
-                    </Text>
+                    <EmptyState text="Geen patiënten gevonden" />
                   )}
                 </View>
               ) : null}
@@ -175,7 +154,7 @@ export default function CreateInteractionScreen({
 
           <Button
             variant="outline"
-            onPress={() => onStartRecording("Anoniem", true)}
+            onPress={() => onStartRecording(null, true)}
             style={{ width: "100%" }}
           >
             <Text style={styles.btnRowText}>Anonieme interactie</Text>
@@ -183,12 +162,11 @@ export default function CreateInteractionScreen({
         </View>
       </ScrollView>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <Button
           onPress={() => {
             if (!selectedPatient) return;
-            onStartRecording(selectedPatient.name, false);
+            onStartRecording(selectedPatient, false);
           }}
           disabled={!selectedPatient}
           style={styles.startBtn}
@@ -211,39 +189,28 @@ export default function CreateInteractionScreen({
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: "500",
-    color: COLORS.text,
-  },
-
   content: {
     paddingHorizontal: 24,
     paddingVertical: 24,
-    gap: 24,
+    gap: SPACING.xl,
   },
 
-  section: { gap: 12 },
-  label: { fontSize: 12, color: COLORS.text },
+  section: {
+    gap: SPACING.md,
+  },
 
   searchBox: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 15,
+    borderRadius: RADIUS.md,
     paddingHorizontal: 12,
     height: 44,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background.white,
   },
+
   searchInput: {
     flex: 1,
     fontSize: 12,
@@ -253,36 +220,26 @@ const styles = StyleSheet.create({
   list: {
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 15,
+    borderRadius: RADIUS.md,
     overflow: "hidden",
-  },
-  listItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  listItem__last: {
-    borderBottomWidth: 0,
+    backgroundColor: COLORS.background.white,
   },
 
   selectedPatient: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 12,
-    padding: 12,
-    borderRadius: 15,
-    backgroundColor: COLORS.bgTint,
+    gap: SPACING.md,
+    padding: SPACING.md,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.background.tint,
     borderWidth: 1,
     borderColor: COLORS.primary,
   },
+
   clearBtn: {
     width: 32,
     height: 32,
-    borderRadius: 15,
+    borderRadius: RADIUS.md,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -292,34 +249,33 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: COLORS.text,
   },
+
   patientNrn: {
     fontSize: 12,
     color: COLORS.text,
     opacity: 0.6,
   },
-  emptyText: {
-    padding: 12,
-    fontSize: 12,
-    color: COLORS.text,
-    opacity: 0.4,
-  },
 
-  actions: { gap: 12 },
+  actions: {
+    gap: SPACING.md,
+  },
 
   footer: {
     paddingHorizontal: 24,
-    paddingVertical: 12,
+    paddingVertical: SPACING.md,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
-    gap: 8,
+    gap: SPACING.sm,
   },
+
   startBtn: {
     width: "100%",
     height: 42,
     backgroundColor: COLORS.primary,
   },
+
   startBtnText: {
-    color: COLORS.white,
+    color: COLORS.background.white,
     fontWeight: "600",
   },
 
@@ -328,12 +284,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   btnRowText: {
-    marginLeft: 8,
+    marginLeft: SPACING.sm,
     fontSize: 12,
     color: COLORS.text,
     fontWeight: "600",
   },
+
   iconFix: {
     marginTop: 1,
   },
@@ -341,15 +299,17 @@ const styles = StyleSheet.create({
   cancelBtn: {
     width: "100%",
     height: 40,
-    borderRadius: 14,
+    borderRadius: RADIUS.md,
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: COLORS.dangerBg,
   },
+
   cancelBtnPressed: {
     transform: [{ scale: 0.97 }],
     opacity: 0.85,
   },
+
   cancelText: {
     fontSize: 12,
     fontWeight: "600",

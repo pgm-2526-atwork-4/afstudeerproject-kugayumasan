@@ -1,21 +1,17 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Pressable } from "react-native";
+import { View, Text, StyleSheet, Pressable, Keyboard } from "react-native";
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
+import FormField from "@design/ui/FormField";
 import { Activity } from "lucide-react-native";
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+import { RADIUS } from "@style/radius";
 
 type Props = {
   onLogin: (username: string, password: string) => void | Promise<void>;
   loading?: boolean;
   error?: string | null;
-};
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
 };
 
 export default function LoginScreen({ onLogin, loading, error }: Props) {
@@ -24,94 +20,100 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
 
   const handleLogin = () => {
     if (!username || !password) return;
+    Keyboard.dismiss();
     onLogin(username, password);
   };
 
   return (
     <Screen>
-      <View style={styles.login}>
-        {/* Center content */}
-        <View style={styles.login__content}>
-          {/* Logo */}
-          <View style={styles.login__brandRow}>
-            <View style={styles.login__logo}>
-              <Activity size={28} strokeWidth={2} color={COLORS.white} />
+      <Pressable style={styles.pressable} onPress={Keyboard.dismiss}>
+        <View style={styles.login}>
+          <View style={styles.login__content}>
+            <View style={styles.login__brandRow}>
+              <View style={styles.login__logo}>
+                <Activity
+                  size={28}
+                  strokeWidth={2}
+                  color={COLORS.background.white}
+                />
+              </View>
+              <Text style={styles.login__brandText}>Vesalius.ai</Text>
             </View>
-            <Text style={styles.login__brandText}>Vesalius.ai</Text>
+
+            <Text style={styles.login__welcome}>Welkom terug</Text>
+
+            <View style={styles.login__form}>
+              <FormField
+                label="Gebruikersnaam"
+                inputProps={{
+                  value: username,
+                  onChangeText: setUsername,
+                  placeholder: "Voer uw gebruikersnaam in",
+                  autoCapitalize: "none",
+                  editable: !loading,
+                  returnKeyType: "next",
+                  onSubmitEditing: () => Keyboard.dismiss(),
+                }}
+              />
+
+              <FormField
+                label="Wachtwoord"
+                inputProps={{
+                  value: password,
+                  onChangeText: setPassword,
+                  placeholder: "Voer uw wachtwoord in",
+                  secureTextEntry: true,
+                  editable: !loading,
+                  returnKeyType: "done",
+                  onSubmitEditing: handleLogin,
+                }}
+              />
+
+              <View style={styles.login__links}>
+                <Pressable onPress={() => {}}>
+                  <Text style={styles.login__link}>
+                    Gebruikersnaam vergeten?
+                  </Text>
+                </Pressable>
+                <Pressable onPress={() => {}}>
+                  <Text style={styles.login__link}>Wachtwoord vergeten?</Text>
+                </Pressable>
+              </View>
+
+              {error ? <Text style={styles.login__error}>{error}</Text> : null}
+
+              <View style={styles.login__buttons}>
+                <Button
+                  onPress={handleLogin}
+                  disabled={loading}
+                  style={styles.login__primaryBtn}
+                  textStyle={styles.login__primaryText}
+                  title={loading ? "Bezig..." : "Aanmelden"}
+                />
+              </View>
+            </View>
           </View>
 
-          <Text style={styles.login__welcome}>Welkom terug</Text>
-
-          {/* Form */}
-          <View style={styles.login__form}>
-            <View style={styles.login__field}>
-              <Text style={styles.login__label}>Gebruikersnaam</Text>
-              <TextInput
-                value={username}
-                onChangeText={setUsername}
-                placeholder="Voer uw gebruikersnaam in"
-                placeholderTextColor="#9AA4B2"
-                style={styles.login__input}
-                autoCapitalize="none"
-                editable={!loading}
-              />
-            </View>
-
-            <View style={styles.login__field}>
-              <Text style={styles.login__label}>Wachtwoord</Text>
-              <TextInput
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Voer uw wachtwoord in"
-                placeholderTextColor="#9AA4B2"
-                style={styles.login__input}
-                secureTextEntry
-                editable={!loading}
-              />
-            </View>
-
-            {/* Links */}
-            <View style={styles.login__links}>
-              <Pressable onPress={() => {}}>
-                <Text style={styles.login__link}>Gebruikersnaam vergeten?</Text>
-              </Pressable>
-              <Pressable onPress={() => {}}>
-                <Text style={styles.login__link}>Wachtwoord vergeten?</Text>
-              </Pressable>
-            </View>
-
-            {/* Error */}
-            {error ? <Text style={styles.login__error}>{error}</Text> : null}
-
-            {/* Button */}
-            <View style={styles.login__buttons}>
-              <Button
-                onPress={handleLogin}
-                disabled={loading}
-                style={styles.login__primaryBtn}
-                textStyle={styles.login__primaryText}
-                title={loading ? "Bezig..." : "Aanmelden"}
-              />
-            </View>
+          <View style={styles.login__footer}>
+            <Text style={styles.login__footerText}>© 2026 Vesalius.ai</Text>
           </View>
         </View>
-
-        {/* Footer */}
-        <View style={styles.login__footer}>
-          <Text style={styles.login__footerText}>© 2026 Vesalius.ai</Text>
-        </View>
-      </View>
+      </Pressable>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  pressable: {
+    flex: 1,
+  },
+
   login: {
     flex: 1,
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 16,
+    backgroundColor: COLORS.background.white,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.md,
+    paddingBottom: SPACING.lg,
   },
 
   login__content: {
@@ -126,17 +128,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 12,
-    marginBottom: 12,
+    gap: SPACING.md,
+    marginBottom: SPACING.md,
   },
+
   login__logo: {
     width: 48,
     height: 48,
-    borderRadius: 15,
+    borderRadius: RADIUS.md,
     backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
   },
+
   login__brandText: {
     fontSize: 24,
     color: COLORS.text,
@@ -148,66 +152,51 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 20,
     fontWeight: "500",
-    marginBottom: 24,
+    marginBottom: SPACING.xl,
   },
 
   login__form: {
-    gap: 16,
-  },
-  login__field: {
-    gap: 8,
-  },
-  login__label: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: COLORS.text,
-  },
-  login__input: {
-    height: 48,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    paddingHorizontal: 12,
-    backgroundColor: COLORS.white,
-    color: COLORS.text,
-    fontSize: 12,
+    gap: SPACING.lg,
   },
 
   login__links: {
-    gap: 8,
-    marginTop: 4,
+    gap: SPACING.sm,
+    marginTop: SPACING.xs,
   },
+
   login__link: {
     fontSize: 12,
     color: COLORS.primary,
   },
 
   login__buttons: {
-    gap: 12,
-    marginTop: 12,
+    gap: SPACING.md,
+    marginTop: SPACING.md,
   },
 
   login__primaryBtn: {
     width: "100%",
     height: 48,
     backgroundColor: COLORS.primary,
-    borderRadius: 15,
+    borderRadius: RADIUS.md,
   },
+
   login__primaryText: {
-    color: COLORS.white,
+    color: COLORS.background.white,
     fontSize: 14,
     fontWeight: "600",
   },
 
   login__error: {
-    color: "#F50C0C",
+    color: COLORS.error,
     fontSize: 12,
   },
 
   login__footer: {
     alignItems: "center",
-    paddingTop: 8,
+    paddingTop: SPACING.sm,
   },
+
   login__footerText: {
     fontSize: 12,
     color: COLORS.text,

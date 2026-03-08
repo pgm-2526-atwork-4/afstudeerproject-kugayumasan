@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import Screen from "@design/ui/ScreenLayout";
+import ScreenHeader from "@design/ui/ScreenHeader";
 import { Button } from "@design/ui/button";
 import {
   User,
@@ -10,11 +11,14 @@ import {
   ChevronDown,
   Check,
 } from "lucide-react-native";
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+import { RADIUS } from "@style/radius";
 
 type Props = {
   onLogout: () => void;
-  profileName?: string; 
-  profileEmail?: string; 
+  profileName?: string;
+  profileEmail?: string;
 };
 
 type Option = { label: string; value: string };
@@ -31,20 +35,9 @@ const ORG_OPTIONS: Option[] = [
   { label: "Central Medical Center", value: "central-medical" },
 ];
 
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-  destructive: "#F50C0C",
-};
-
 function getLabel(value: string, options: Option[]) {
   return options.find((o) => o.value === value)?.label ?? "";
 }
-
-/* ---------- Inline Select ---------- */
 
 function InlineSelect({
   headerTitle,
@@ -71,7 +64,7 @@ function InlineSelect({
         onPress={onToggle}
         style={[
           styles.select__control,
-          open ? styles["select__control--open"] : null,
+          open ? styles.select__controlOpen : null,
         ]}
       >
         <Text
@@ -143,7 +136,6 @@ function InlineSelect({
   );
 }
 
-
 export default function SettingsScreen({
   onLogout,
   profileName,
@@ -155,33 +147,25 @@ export default function SettingsScreen({
 
   return (
     <Screen>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Instellingen</Text>
-      </View>
+      <ScreenHeader title="Instellingen" />
 
-      {/* Content */}
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* Profile */}
         <View style={styles.profile}>
           <View style={styles.avatar}>
-            <User size={32} color={COLORS.white} strokeWidth={1.5} />
+            <User size={32} color={COLORS.background.white} strokeWidth={1.5} />
           </View>
 
           <View style={{ flex: 1 }}>
-            {/* ✅ dynamic */}
             <Text style={styles.name}>{profileName ?? "—"}</Text>
             <Text style={styles.email}>{profileEmail ?? "—"}</Text>
           </View>
         </View>
 
-        {/* Options */}
         <View style={styles.section}>
-          {/* Language */}
           <View style={styles.field}>
             <View style={styles.label}>
               <Globe
@@ -210,7 +194,6 @@ export default function SettingsScreen({
             />
           </View>
 
-          {/* Organization */}
           <View style={styles.field}>
             <View style={styles.label}>
               <Building2
@@ -240,7 +223,6 @@ export default function SettingsScreen({
           </View>
         </View>
 
-        {/* App Info */}
         <View style={styles.info}>
           <Text style={styles.appName}>Vesalius.ai Mobile</Text>
           <Text style={styles.muted}>Versie 1.0.2</Text>
@@ -248,16 +230,15 @@ export default function SettingsScreen({
         </View>
       </ScrollView>
 
-      {/* Footer */}
       <View style={styles.footer}>
         <Button
           variant="outline"
           onPress={onLogout}
-          style={{ borderColor: COLORS.destructive, width: "100%" }}
-          textStyle={{ color: COLORS.destructive, fontWeight: "500" }}
+          style={{ borderColor: COLORS.error, width: "100%" }}
+          textStyle={{ color: COLORS.error, fontWeight: "500" }}
         >
-          <LogOut size={18} strokeWidth={1.5} color={COLORS.destructive} />
-          <Text style={{ marginLeft: 8 }}>Uitloggen</Text>
+          <LogOut size={18} strokeWidth={1.5} color={COLORS.error} />
+          <Text style={{ marginLeft: SPACING.sm }}>Uitloggen</Text>
         </Button>
       </View>
     </Screen>
@@ -265,58 +246,60 @@ export default function SettingsScreen({
 }
 
 const styles = StyleSheet.create({
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 12,
-    paddingBottom: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  headerTitle: {
-    color: COLORS.text,
-    fontSize: 20,
-    fontWeight: "500",
-  },
-
   content: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
-    gap: 24,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xl,
+    gap: SPACING.xl,
   },
 
   profile: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 16,
-    paddingBottom: 24,
+    gap: SPACING.lg,
+    paddingBottom: SPACING.xl,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
   avatar: {
     width: 64,
     height: 64,
-    borderRadius: 15,
+    borderRadius: RADIUS.md,
     backgroundColor: COLORS.primary,
     alignItems: "center",
     justifyContent: "center",
   },
-  name: { fontSize: 14, fontWeight: "600", color: COLORS.text },
-  email: { fontSize: 12, color: COLORS.text, opacity: 0.6 },
+  name: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: COLORS.text,
+  },
+  email: {
+    fontSize: 12,
+    color: COLORS.text,
+    opacity: 0.6,
+  },
 
-  section: { gap: 24 },
-  field: { gap: 8 },
+  section: {
+    gap: SPACING.xl,
+  },
+  field: {
+    gap: SPACING.sm,
+  },
 
   label: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SPACING.sm,
   },
-  labelText: { fontSize: 12, color: COLORS.text },
+  labelText: {
+    fontSize: 12,
+    color: COLORS.text,
+  },
 
   info: {
     alignItems: "center",
-    gap: 4,
-    marginTop: 12,
+    gap: SPACING.xs,
+    marginTop: SPACING.md,
   },
   appName: {
     fontSize: 12,
@@ -324,11 +307,15 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     opacity: 0.8,
   },
-  muted: { fontSize: 12, color: COLORS.text, opacity: 0.4 },
+  muted: {
+    fontSize: 12,
+    color: COLORS.text,
+    opacity: 0.4,
+  },
 
   footer: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xl,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
@@ -337,34 +324,44 @@ const styles = StyleSheet.create({
     height: 44,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 15,
-    paddingHorizontal: 12,
-    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.md,
+    paddingHorizontal: SPACING.md,
+    backgroundColor: COLORS.background.white,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  "select__control--open": {
+  select__controlOpen: {
     borderColor: COLORS.primary,
   },
-  select__text: { fontSize: 12, color: COLORS.text },
-  select__placeholder: { color: "#9AA4B2" },
+  select__text: {
+    fontSize: 12,
+    color: COLORS.text,
+  },
+  select__placeholder: {
+    color: COLORS.placeholder,
+  },
 
-  select__chevronWrap: { opacity: 0.6 },
-  select__chevronWrapOpen: { transform: [{ rotate: "180deg" }], opacity: 0.85 },
+  select__chevronWrap: {
+    opacity: 0.6,
+  },
+  select__chevronWrapOpen: {
+    transform: [{ rotate: "180deg" }],
+    opacity: 0.85,
+  },
   select__chevronIcon: {},
 
   select__dropdown: {
-    marginTop: 8,
+    marginTop: SPACING.sm,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 15,
-    backgroundColor: COLORS.white,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.background.white,
     overflow: "hidden",
   },
   select__dropdownHeader: {
     height: 40,
-    paddingHorizontal: 12,
+    paddingHorizontal: SPACING.md,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -378,19 +375,29 @@ const styles = StyleSheet.create({
   },
 
   select__item: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    paddingHorizontal: SPACING.md,
+    paddingVertical: SPACING.md,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  select__itemLast: { borderBottomWidth: 0 },
-  select__itemActive: { backgroundColor: COLORS.bgTint },
+  select__itemLast: {
+    borderBottomWidth: 0,
+  },
+  select__itemActive: {
+    backgroundColor: COLORS.background.tint,
+  },
 
   select__itemRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  select__itemText: { fontSize: 12, color: COLORS.text },
-  select__itemTextActive: { color: COLORS.primary, fontWeight: "700" },
+  select__itemText: {
+    fontSize: 12,
+    color: COLORS.text,
+  },
+  select__itemTextActive: {
+    color: COLORS.primary,
+    fontWeight: "700",
+  },
 });
