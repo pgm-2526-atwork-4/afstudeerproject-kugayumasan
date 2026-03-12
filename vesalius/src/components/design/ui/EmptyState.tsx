@@ -1,16 +1,22 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
+
 import { COLORS } from "@style/colors";
 import { SPACING } from "@style/spacing";
 
 type Props = {
-  text: string;
+  title: string;
+  description?: string;
 };
 
-export default function EmptyState({ text }: Props) {
+export default function EmptyState({ title, description }: Props) {
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{text}</Text>
+      <Text style={styles.title}>{title}</Text>
+
+      {description ? (
+        <Text style={styles.description}>{description}</Text>
+      ) : null}
     </View>
   );
 }
@@ -18,14 +24,20 @@ export default function EmptyState({ text }: Props) {
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: SPACING.xl,
-    paddingVertical: 48,
-    alignItems: "center",
-    justifyContent: "center",
+    paddingVertical: SPACING.md,
+    alignItems: "flex-start",
   },
-  text: {
+
+  title: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.text,
+    marginBottom: 2,
+  },
+
+  description: {
     fontSize: 12,
     color: COLORS.text,
-    opacity: 0.4,
-    textAlign: "center",
+    opacity: 0.5,
   },
 });
