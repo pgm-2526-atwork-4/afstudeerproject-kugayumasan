@@ -19,3 +19,15 @@ export type SearchPatientsParams = {
   email?: string;
   limit?: number;
 };
+
+export type CreatePatientInput = {
+  first_name: string;
+  last_name: string;
+  birthdate?: string;
+  gender?: string;
+  language?: string;
+  email?: string;
+  phone?: string;
+  social_security_number?: string;
+  username?: string;
+};

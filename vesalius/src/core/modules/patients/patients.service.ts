@@ -22,4 +22,25 @@ export const patientsService = {
       `/institutions/${institutionId}/users${buildQuery(query)}`,
     );
   },
+
+  async create(
+    institutionId: string,
+    data: {
+      first_name: string;
+      last_name: string;
+      birthdate?: string;
+      gender?: string;
+      language?: string;
+      email?: string;
+      phone?: string;
+      social_security_number?: string;
+      username?: string;
+    },
+  ): Promise<Patient> {
+    return http.post<Patient>("/users", {
+      ...data,
+      institution_id: institutionId,
+      roles: ["patient"],
+    });
+  },
 };
