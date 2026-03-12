@@ -117,7 +117,7 @@ export default function CreateInteractionScreen({
                   {isLoading ? (
                     <LoadingCard text="Patiënten laden..." />
                   ) : error ? (
-                    <EmptyState text={error} />
+                    <EmptyState title={error} />
                   ) : patients.length > 0 ? (
                     patients.map((p, idx) => (
                       <PatientRow
@@ -131,7 +131,7 @@ export default function CreateInteractionScreen({
                       />
                     ))
                   ) : (
-                    <EmptyState text="Geen patiënten gevonden" />
+                    <EmptyState title="Geen patiënten gevonden" />
                   )}
                 </View>
               ) : null}

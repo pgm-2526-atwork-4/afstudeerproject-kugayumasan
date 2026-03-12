@@ -7,195 +7,44 @@ import {
   TextInput,
   Pressable,
 } from "react-native";
+
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
-import {
-  X,
-  Calendar,
-  ChevronRight,
-  ChevronDown,
-  Check,
-} from "lucide-react-native";
 
-type PatientResult = { id: string; name: string };
+import { X, Calendar, ChevronRight } from "lucide-react-native";
+
+import { COLORS } from "@style/colors";
+
+import { useSession } from "@core/modules/session/session.context";
+import { patientsService } from "@core/modules/patients/patients.service";
+
+import InlineSelect from "@design/ui/InlineSelect";
+
+import {
+  GENDER_OPTIONS,
+  LANGUAGE_OPTIONS,
+  COUNTRY_CODE_OPTIONS,
+} from "@core/modules/patients/constants/patientForm.constants";
+
+import type { FormData } from "@core/modules/patients/patientForm.types";
+import { formatBirthdate } from "@core/utils/patients.utils";
+
+type PatientResult = {
+  id: string;
+  name: string;
+};
 
 type Props = {
-  onSavePatient: (patient: PatientResult) => void;
   onCancel: () => void;
+  onSavePatient: (patient: PatientResult) => void;
 };
-
-type FormData = {
-  nrn: string;
-  firstName: string;
-  lastName: string;
-  birthDate: string;
-  gender: string;
-  language: string;
-  countryCode: string;
-  phone: string;
-  email: string;
-  username: string;
-};
-
-type Option = { label: string; value: string };
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-  destructive: "#F50C0C",
-};
-
-const GENDER_OPTIONS: Option[] = [
-  { label: "Man", value: "male" },
-  { label: "Vrouw", value: "female" },
-  { label: "Andere", value: "other" },
-];
-
-const LANGUAGE_OPTIONS: Option[] = [
-  { label: "Nederlands", value: "nl" },
-  { label: "Frans", value: "fr" },
-  { label: "Engels", value: "en" },
-];
-
-const COUNTRY_CODE_OPTIONS: Option[] = [
-  { label: "+32", value: "+32" },
-  { label: "+31", value: "+31" },
-  { label: "+33", value: "+33" },
-  { label: "+44", value: "+44" },
-];
-
-function getLabel(value: string, options: Option[]) {
-  return options.find((o) => o.value === value)?.label ?? "";
-}
-
-/* ---------- Inline Select ---------- */
-
-type InlineSelectProps = {
-  headerTitle: string;
-  placeholder: string;
-  value: string;
-  options: Option[];
-  open: boolean;
-  onToggle: () => void;
-  onPick: (v: string) => void;
-  onClose: () => void;
-  error?: boolean;
-  compact?: boolean;
-};
-
-function InlineSelect({
-  headerTitle,
-  placeholder,
-  value,
-  options,
-  open,
-  onToggle,
-  onPick,
-  onClose,
-  error,
-  compact,
-}: InlineSelectProps) {
-  return (
-    <View>
-      <Pressable
-        onPress={onToggle}
-        style={[
-          compact ? styles.select__controlCompact : styles.select__control,
-          error ? styles["select__control--error"] : null,
-          open ? styles["select__control--open"] : null,
-        ]}
-      >
-        <Text
-          style={[
-            styles.select__text,
-            !value ? styles.select__placeholder : null,
-          ]}
-        >
-          {value ? getLabel(value, options) : placeholder}
-        </Text>
-
-        {/* ✅ FIX: rotate on wrapper, not on icon */}
-        <View
-          style={[
-            styles.select__chevronWrap,
-            open ? styles.select__chevronWrapOpen : null,
-          ]}
-        >
-          <ChevronDown
-            size={18}
-            strokeWidth={1.5}
-            color={COLORS.text}
-            style={styles.select__chevronIcon}
-          />
-        </View>
-      </Pressable>
-
-      {open ? (
-        // overlay: click outside closes
-        <Pressable onPress={onClose} style={styles.select__overlay}>
-          {/* stop propagation inside dropdown */}
-          <Pressable
-            onPress={() => {}}
-            style={
-              compact ? styles.select__dropdownCompact : styles.select__dropdown
-            }
-          >
-            <View style={styles.select__dropdownHeader}>
-              <Text style={styles.select__dropdownTitle}>{headerTitle}</Text>
-            </View>
-
-            {options.map((opt, idx) => {
-              const active = opt.value === value;
-              const last = idx === options.length - 1;
-
-              return (
-                <Pressable
-                  key={opt.value}
-                  onPress={() => onPick(opt.value)}
-                  style={[
-                    styles.select__item,
-                    active ? styles.select__itemActive : null,
-                    last ? styles.select__itemLast : null,
-                  ]}
-                >
-                  <View style={styles.select__itemRow}>
-                    <Text
-                      style={[
-                        styles.select__itemText,
-                        active ? styles.select__itemTextActive : null,
-                      ]}
-                    >
-                      {opt.label}
-                    </Text>
-
-                    {active ? (
-                      <Check
-                        size={16}
-                        strokeWidth={2}
-                        color={COLORS.primary}
-                        style={styles.select__checkIcon}
-                      />
-                    ) : null}
-                  </View>
-                </Pressable>
-              );
-            })}
-          </Pressable>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
-
-/* ---------- Screen ---------- */
 
 export default function CreatePatientScreen({
-  onSavePatient,
   onCancel,
+  onSavePatient,
 }: Props) {
+  const { selectedInstitutionId } = useSession();
+
   const [formData, setFormData] = useState<FormData>({
     nrn: "",
     firstName: "",
@@ -210,17 +59,21 @@ export default function CreatePatientScreen({
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
   const [openSelect, setOpenSelect] = useState<
     null | "gender" | "language" | "countryCode"
   >(null);
 
   const updateField = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev: FormData) => ({
+      ...prev,
+      [field]: value,
+    }));
 
-    if (errors[field]) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next[field];
+    if (errors[field as string]) {
+      setErrors((prevErrors: Record<string, string>) => {
+        const next = { ...prevErrors };
+        delete next[field as string];
         return next;
       });
     }
@@ -240,115 +93,124 @@ export default function CreatePatientScreen({
     }
 
     setErrors(next);
+
     return Object.keys(next).length === 0;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!validate()) return;
 
-    const patient: PatientResult = {
-      id: Date.now().toString(),
-      name: `${formData.firstName} ${formData.lastName}`,
-    };
+    if (!selectedInstitutionId) {
+      console.error("No institution selected");
+      return;
+    }
 
-    onSavePatient(patient);
+    try {
+      const patient = await patientsService.create(selectedInstitutionId, {
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        birthdate: formData.birthDate
+          ? formatBirthdate(formData.birthDate)
+          : undefined,
+        gender: formData.gender || undefined,
+        language: formData.language || undefined,
+        email: formData.email || undefined,
+        phone: formData.phone
+          ? `${formData.countryCode}${formData.phone}`
+          : undefined,
+        social_security_number: formData.nrn || undefined,
+        username: formData.username || undefined,
+      });
+
+      onSavePatient({
+        id: patient.id,
+        name: `${patient.first_name ?? ""} ${patient.last_name ?? ""}`.trim(),
+      });
+    } catch (err) {
+      console.error("Create patient failed", err);
+    }
   };
 
   const closeDropdowns = () => setOpenSelect(null);
 
   return (
     <Screen>
-      {/* Header */}
-      <View style={styles.patientCreate__header}>
-        <Pressable onPress={onCancel} style={styles.patientCreate__leaveBtn}>
+      <View style={styles.header}>
+        <Pressable onPress={onCancel} style={styles.leaveBtn}>
           <X size={18} strokeWidth={1.5} color={COLORS.text} />
-          <Text style={styles.patientCreate__leaveText}>Verlaat</Text>
+          <Text style={styles.leaveText}>Verlaat</Text>
         </Pressable>
 
-        <Text style={styles.patientCreate__title}>
-          Voeg een nieuwe patiënt toe
-        </Text>
+        <Text style={styles.title}>Voeg een nieuwe patiënt toe</Text>
       </View>
 
-      {/* Content */}
       <ScrollView
-        contentContainerStyle={styles.patientCreate__content}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* NRN */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>
-            Nationaal registratienummer
-          </Text>
+        {/* FIRST NAME */}
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Nationaal registratienummer</Text>
+
           <TextInput
             value={formData.nrn}
             onChangeText={(v) => updateField("nrn", v)}
             placeholder="00.00.00-000.00"
-            placeholderTextColor="#9AA4B2"
-            style={styles.patientCreate__input}
+            placeholderTextColor={COLORS.placeholder}
+            style={styles.input}
             onFocus={closeDropdowns}
           />
         </View>
 
-        {/* First Name */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>
-            Voornaam <Text style={styles.patientCreate__required}>*</Text>
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            Voornaam <Text style={styles.required}>*</Text>
           </Text>
+
           <TextInput
             value={formData.firstName}
             onChangeText={(v) => updateField("firstName", v)}
             placeholder="Voer voornaam in"
-            placeholderTextColor="#9AA4B2"
-            style={[
-              styles.patientCreate__input,
-              errors.firstName ? styles["patientCreate__input--error"] : null,
-            ]}
+            placeholderTextColor={COLORS.placeholder}
+            style={styles.input}
             onFocus={closeDropdowns}
           />
-          {errors.firstName ? (
-            <Text style={styles.patientCreate__errorText}>
-              {errors.firstName}
-            </Text>
-          ) : null}
         </View>
 
-        {/* Last Name */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>
-            Familienaam <Text style={styles.patientCreate__required}>*</Text>
+        {/* LAST NAME */}
+
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            Familienaam <Text style={styles.required}>*</Text>
           </Text>
+
           <TextInput
             value={formData.lastName}
             onChangeText={(v) => updateField("lastName", v)}
             placeholder="Voer familienaam in"
-            placeholderTextColor="#9AA4B2"
-            style={[
-              styles.patientCreate__input,
-              errors.lastName ? styles["patientCreate__input--error"] : null,
-            ]}
+            placeholderTextColor={COLORS.placeholder}
+            style={styles.input}
             onFocus={closeDropdowns}
           />
-          {errors.lastName ? (
-            <Text style={styles.patientCreate__errorText}>
-              {errors.lastName}
-            </Text>
-          ) : null}
         </View>
 
-        {/* Birth Date */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>Geboortedatum</Text>
-          <View style={styles.patientCreate__inputIconRow}>
+        {/* BIRTHDATE */}
+
+        <View style={styles.field}>
+          <Text style={styles.label}>Geboortedatum</Text>
+
+          <View style={styles.inputIconRow}>
             <TextInput
               value={formData.birthDate}
               onChangeText={(v) => updateField("birthDate", v)}
               placeholder="dd/mm/yyyy"
-              placeholderTextColor="#9AA4B2"
-              style={styles.patientCreate__inputIconRowInput}
+              placeholderTextColor={COLORS.placeholder}
+              style={styles.inputIconInput}
               onFocus={closeDropdowns}
             />
+
             <Calendar
               size={18}
               strokeWidth={1.5}
@@ -358,10 +220,11 @@ export default function CreatePatientScreen({
           </View>
         </View>
 
-        {/* Gender */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>
-            Geslacht <Text style={styles.patientCreate__required}>*</Text>
+        {/* GENDER */}
+
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            Geslacht <Text style={styles.required}>*</Text>
           </Text>
 
           <InlineSelect
@@ -380,16 +243,10 @@ export default function CreatePatientScreen({
             }}
             onClose={() => setOpenSelect(null)}
           />
-
-          {errors.gender ? (
-            <Text style={styles.patientCreate__errorText}>{errors.gender}</Text>
-          ) : null}
         </View>
-
-        {/* Language */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>
-            Taal <Text style={styles.patientCreate__required}>*</Text>
+        <View style={styles.field}>
+          <Text style={styles.label}>
+            Taal <Text style={styles.required}>*</Text>
           </Text>
 
           <InlineSelect
@@ -409,18 +266,15 @@ export default function CreatePatientScreen({
             onClose={() => setOpenSelect(null)}
           />
 
-          {errors.language ? (
-            <Text style={styles.patientCreate__errorText}>
-              {errors.language}
-            </Text>
-          ) : null}
+          {errors.language && (
+            <Text style={styles.errorText}>{errors.language}</Text>
+          )}
         </View>
 
-        {/* Phone */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>Telefoonnummer</Text>
+        <View style={styles.field}>
+          <Text style={styles.label}>Telefoonnummer</Text>
 
-          <View style={styles.patientCreate__phoneRow}>
+          <View style={styles.phoneRow}>
             <View style={{ width: 96 }}>
               <InlineSelect
                 headerTitle="Kies"
@@ -446,70 +300,60 @@ export default function CreatePatientScreen({
               value={formData.phone}
               onChangeText={(v) => updateField("phone", v)}
               placeholder="000 00 00 00"
-              placeholderTextColor="#9AA4B2"
+              placeholderTextColor={COLORS.placeholder}
               keyboardType="phone-pad"
-              style={[
-                styles.patientCreate__input,
-                styles.patientCreate__phoneInput,
-                errors.phone ? styles["patientCreate__input--error"] : null,
-              ]}
+              style={[styles.input, styles.phoneInput]}
               onFocus={closeDropdowns}
             />
           </View>
 
-          <Text style={styles.patientCreate__helper}>
-            ** Telefoon of email is verplicht
-          </Text>
-          {errors.phone ? (
-            <Text style={styles.patientCreate__errorText}>{errors.phone}</Text>
-          ) : null}
-        </View>
+          <Text style={styles.helper}>** Telefoon of email is verplicht</Text>
 
-        {/* Email */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>E-mailadres</Text>
+          {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>E-mailadres</Text>
+
           <TextInput
             value={formData.email}
             onChangeText={(v) => updateField("email", v)}
             placeholder="naam@voorbeeld.be"
-            placeholderTextColor="#9AA4B2"
+            placeholderTextColor={COLORS.placeholder}
             keyboardType="email-address"
             autoCapitalize="none"
-            style={[
-              styles.patientCreate__input,
-              errors.email ? styles["patientCreate__input--error"] : null,
-            ]}
+            style={styles.input}
             onFocus={closeDropdowns}
           />
-          <Text style={styles.patientCreate__helper}>
-            ** Telefoon of email is verplicht
-          </Text>
-          {errors.email ? (
-            <Text style={styles.patientCreate__errorText}>{errors.email}</Text>
-          ) : null}
-        </View>
 
-        {/* Username */}
-        <View style={styles.patientCreate__field}>
-          <Text style={styles.patientCreate__label}>Gebruikersnaam</Text>
+          <Text style={styles.helper}>** Telefoon of email is verplicht</Text>
+
+          {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+        </View>
+        <View style={styles.field}>
+          <Text style={styles.label}>Gebruikersnaam</Text>
+
           <TextInput
             value={formData.username}
             onChangeText={(v) => updateField("username", v)}
             placeholder="Voer gebruikersnaam in"
-            placeholderTextColor="#9AA4B2"
+            placeholderTextColor={COLORS.placeholder}
             autoCapitalize="none"
-            style={styles.patientCreate__input}
+            style={styles.input}
             onFocus={closeDropdowns}
           />
         </View>
       </ScrollView>
 
-      {/* Footer */}
-      <View style={styles.patientCreate__footer}>
-        <Button onPress={handleSubmit} style={styles.patientCreate__confirmBtn}>
-          <View style={styles.patientCreate__confirmRow}>
-            <Text style={styles.patientCreate__confirmText}>Bevestigen</Text>
-            <ChevronRight size={18} strokeWidth={1.5} color={COLORS.white} />
+      <View style={styles.footer}>
+        <Button onPress={handleSubmit} style={styles.confirmBtn}>
+          <View style={styles.confirmRow}>
+            <Text style={styles.confirmText}>Bevestigen</Text>
+
+            <ChevronRight
+              size={18}
+              strokeWidth={1.5}
+              color={COLORS.background.white}
+            />
           </View>
         </Button>
       </View>
@@ -518,223 +362,116 @@ export default function CreatePatientScreen({
 }
 
 const styles = StyleSheet.create({
-  patientCreate__header: {
+  header: {
     paddingHorizontal: 24,
     paddingTop: 12,
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
-  patientCreate__leaveBtn: {
+
+  leaveBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
     marginBottom: 10,
   },
-  patientCreate__leaveText: {
+
+  leaveText: {
     fontSize: 12,
     color: COLORS.text,
-    opacity: 0.9,
   },
-  patientCreate__title: {
+
+  title: {
     fontSize: 20,
     fontWeight: "500",
     color: COLORS.text,
   },
 
-  patientCreate__content: {
+  content: {
     paddingHorizontal: 24,
     paddingVertical: 24,
     gap: 16,
   },
 
-  patientCreate__field: { gap: 8 },
-  patientCreate__label: { fontSize: 12, color: COLORS.text },
-  patientCreate__required: { color: COLORS.destructive },
+  field: { gap: 8 },
 
-  patientCreate__input: {
+  label: { fontSize: 12, color: COLORS.text },
+
+  required: { color: COLORS.error },
+
+  input: {
     height: 44,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 15,
     paddingHorizontal: 12,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background.white,
     color: COLORS.text,
     fontSize: 12,
   },
-  "patientCreate__input--error": {
-    borderColor: COLORS.destructive,
-  },
 
-  patientCreate__inputIconRow: {
+  inputIconRow: {
     height: 44,
     borderWidth: 1,
     borderColor: COLORS.border,
     borderRadius: 15,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background.white,
     paddingHorizontal: 12,
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
   },
-  patientCreate__inputIconRowInput: {
+
+  inputIconInput: {
     flex: 1,
-    height: 44,
     fontSize: 12,
     color: COLORS.text,
   },
-
-  patientCreate__phoneRow: {
-    flexDirection: "row",
-    gap: 8,
-    alignItems: "flex-start",
-  },
-  patientCreate__phoneInput: {
-    flex: 1,
-  },
-
-  patientCreate__helper: {
+  helper: {
     fontSize: 12,
     color: COLORS.text,
     opacity: 0.6,
   },
-  patientCreate__errorText: {
+
+  errorText: {
     fontSize: 12,
-    color: COLORS.destructive,
+    color: COLORS.error,
   },
 
-  patientCreate__footer: {
+  phoneRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+  },
+
+  phoneInput: {
+    flex: 1,
+  },
+
+  footer: {
     paddingHorizontal: 24,
     paddingVertical: 16,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
-  patientCreate__confirmBtn: {
+
+  confirmBtn: {
     width: "100%",
     height: 48,
     backgroundColor: COLORS.primary,
   },
-  patientCreate__confirmRow: {
+
+  confirmRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
   },
-  patientCreate__confirmText: {
-    color: COLORS.white,
+
+  confirmText: {
+    color: COLORS.background.white,
     fontWeight: "600",
     fontSize: 14,
-  },
-
-  /* Inline select */
-  select__overlay: {
-    position: "relative",
-  },
-  select__control: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  select__controlCompact: {
-    height: 44,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    backgroundColor: COLORS.white,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  "select__control--open": {
-    borderColor: COLORS.primary,
-  },
-  "select__control--error": {
-    borderColor: COLORS.destructive,
-  },
-  select__text: {
-    fontSize: 12,
-    color: COLORS.text,
-  },
-  select__placeholder: {
-    color: "#9AA4B2",
-  },
-
-  /* ✅ FIX: rotate wrapper */
-  select__chevronWrap: {
-    opacity: 0.6,
-  },
-  select__chevronWrapOpen: {
-    transform: [{ rotate: "180deg" }],
-    opacity: 0.8,
-  },
-  select__chevronIcon: {},
-
-  select__dropdown: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    backgroundColor: COLORS.white,
-    overflow: "hidden",
-  },
-  select__dropdownCompact: {
-    marginTop: 8,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-    borderRadius: 15,
-    backgroundColor: COLORS.white,
-    overflow: "hidden",
-  },
-
-  select__dropdownHeader: {
-    height: 40,
-    paddingHorizontal: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  select__dropdownTitle: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: COLORS.text,
-  },
-
-  select__item: {
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: COLORS.border,
-  },
-  select__itemLast: {
-    borderBottomWidth: 0,
-  },
-  select__itemActive: {
-    backgroundColor: COLORS.bgTint,
-  },
-
-  select__itemRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  select__itemText: {
-    fontSize: 12,
-    color: COLORS.text,
-  },
-  select__itemTextActive: {
-    color: COLORS.primary,
-    fontWeight: "700",
-  },
-  select__checkIcon: {
-    marginLeft: 12,
   },
 });
