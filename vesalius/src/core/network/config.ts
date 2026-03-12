@@ -1,8 +1,7 @@
-export const API_BASE_URL = "https://api.assistant-acc.vesalius.ai/api/v1";
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "";
 
 export const KEYCLOAK = {
-  realm: "MEDPLaNNER",
-  clientId: "vesalius-scribe-app",
-  tokenUrl:
-    "https://iam-acc.vesalius.ai/realms/MEDPLaNNER/protocol/openid-connect/token",
+  tokenUrl: process.env.EXPO_PUBLIC_KEYCLOAK_URL ?? "",
+  realm: process.env.EXPO_PUBLIC_KEYCLOAK_REALM ?? "",
+  clientId: process.env.EXPO_PUBLIC_KEYCLOAK_CLIENT_ID ?? "",
 };
