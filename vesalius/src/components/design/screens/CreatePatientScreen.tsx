@@ -17,7 +17,7 @@ import { COLORS } from "@style/colors";
 
 import { useSession } from "@core/modules/session/session.context";
 import { patientsService } from "@core/modules/patients/patients.service";
-
+import { useTranslation } from "react-i18next";
 import InlineSelect from "@design/ui/InlineSelect";
 
 import {
@@ -131,6 +131,8 @@ export default function CreatePatientScreen({
     }
   };
 
+  const { t } = useTranslation();
+
   const closeDropdowns = () => setOpenSelect(null);
 
   return (
@@ -138,10 +140,10 @@ export default function CreatePatientScreen({
       <View style={styles.header}>
         <Pressable onPress={onCancel} style={styles.leaveBtn}>
           <X size={18} strokeWidth={1.5} color={COLORS.text} />
-          <Text style={styles.leaveText}>Verlaat</Text>
+          <Text style={styles.leaveText}>{t("patient.leave")}</Text>
         </Pressable>
 
-        <Text style={styles.title}>Voeg een nieuwe patiënt toe</Text>
+        <Text style={styles.title}>{t("patient.createTitle")}</Text>
       </View>
 
       <ScrollView
@@ -149,15 +151,13 @@ export default function CreatePatientScreen({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        {/* FIRST NAME */}
-
         <View style={styles.field}>
-          <Text style={styles.label}>Nationaal registratienummer</Text>
+          <Text style={styles.label}>{t("patient.nrn")}</Text>
 
           <TextInput
             value={formData.nrn}
             onChangeText={(v) => updateField("nrn", v)}
-            placeholder="00.00.00-000.00"
+            placeholder={t("patient.nrnPlaceholder")}
             placeholderTextColor={COLORS.placeholder}
             style={styles.input}
             onFocus={closeDropdowns}
@@ -166,70 +166,59 @@ export default function CreatePatientScreen({
 
         <View style={styles.field}>
           <Text style={styles.label}>
-            Voornaam <Text style={styles.required}>*</Text>
+            {t("patient.firstName")} <Text style={styles.required}>*</Text>
           </Text>
 
           <TextInput
             value={formData.firstName}
             onChangeText={(v) => updateField("firstName", v)}
-            placeholder="Voer voornaam in"
+            placeholder={t("patient.firstNamePlaceholder")}
             placeholderTextColor={COLORS.placeholder}
             style={styles.input}
             onFocus={closeDropdowns}
           />
         </View>
 
-        {/* LAST NAME */}
-
         <View style={styles.field}>
           <Text style={styles.label}>
-            Familienaam <Text style={styles.required}>*</Text>
+            {t("patient.lastName")} <Text style={styles.required}>*</Text>
           </Text>
 
           <TextInput
             value={formData.lastName}
             onChangeText={(v) => updateField("lastName", v)}
-            placeholder="Voer familienaam in"
+            placeholder={t("patient.lastNamePlaceholder")}
             placeholderTextColor={COLORS.placeholder}
             style={styles.input}
             onFocus={closeDropdowns}
           />
         </View>
 
-        {/* BIRTHDATE */}
-
         <View style={styles.field}>
-          <Text style={styles.label}>Geboortedatum</Text>
+          <Text style={styles.label}>{t("patient.birthDate")}</Text>
 
           <View style={styles.inputIconRow}>
             <TextInput
               value={formData.birthDate}
               onChangeText={(v) => updateField("birthDate", v)}
-              placeholder="dd/mm/yyyy"
+              placeholder={t("patient.birthDatePlaceholder")}
               placeholderTextColor={COLORS.placeholder}
               style={styles.inputIconInput}
               onFocus={closeDropdowns}
             />
 
-            <Calendar
-              size={18}
-              strokeWidth={1.5}
-              color={COLORS.text}
-              style={{ opacity: 0.4 }}
-            />
+            <Calendar size={18} strokeWidth={1.5} color={COLORS.text} />
           </View>
         </View>
 
-        {/* GENDER */}
-
         <View style={styles.field}>
           <Text style={styles.label}>
-            Geslacht <Text style={styles.required}>*</Text>
+            {t("patient.gender")} <Text style={styles.required}>*</Text>
           </Text>
 
           <InlineSelect
-            headerTitle="Selecteer geslacht"
-            placeholder="Selecteer geslacht"
+            headerTitle={t("patient.selectGender")}
+            placeholder={t("patient.selectGender")}
             value={formData.gender}
             options={GENDER_OPTIONS}
             open={openSelect === "gender"}
@@ -244,14 +233,15 @@ export default function CreatePatientScreen({
             onClose={() => setOpenSelect(null)}
           />
         </View>
+
         <View style={styles.field}>
           <Text style={styles.label}>
-            Taal <Text style={styles.required}>*</Text>
+            {t("patient.language")} <Text style={styles.required}>*</Text>
           </Text>
 
           <InlineSelect
-            headerTitle="Selecteer taal"
-            placeholder="Selecteer taal"
+            headerTitle={t("patient.selectLanguage")}
+            placeholder={t("patient.selectLanguage")}
             value={formData.language}
             options={LANGUAGE_OPTIONS}
             open={openSelect === "language"}
@@ -272,12 +262,12 @@ export default function CreatePatientScreen({
         </View>
 
         <View style={styles.field}>
-          <Text style={styles.label}>Telefoonnummer</Text>
+          <Text style={styles.label}>{t("patient.phone")}</Text>
 
           <View style={styles.phoneRow}>
             <View style={{ width: 96 }}>
               <InlineSelect
-                headerTitle="Kies"
+                headerTitle={t("patient.select")}
                 placeholder="+32"
                 value={formData.countryCode}
                 options={COUNTRY_CODE_OPTIONS}
@@ -299,7 +289,7 @@ export default function CreatePatientScreen({
             <TextInput
               value={formData.phone}
               onChangeText={(v) => updateField("phone", v)}
-              placeholder="000 00 00 00"
+              placeholder={t("patient.phonePlaceholder")}
               placeholderTextColor={COLORS.placeholder}
               keyboardType="phone-pad"
               style={[styles.input, styles.phoneInput]}
@@ -307,17 +297,18 @@ export default function CreatePatientScreen({
             />
           </View>
 
-          <Text style={styles.helper}>** Telefoon of email is verplicht</Text>
+          <Text style={styles.helper}>{t("patient.phoneOrEmailRequired")}</Text>
 
           {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
         </View>
+
         <View style={styles.field}>
-          <Text style={styles.label}>E-mailadres</Text>
+          <Text style={styles.label}>{t("patient.email")}</Text>
 
           <TextInput
             value={formData.email}
             onChangeText={(v) => updateField("email", v)}
-            placeholder="naam@voorbeeld.be"
+            placeholder={t("patient.emailPlaceholder")}
             placeholderTextColor={COLORS.placeholder}
             keyboardType="email-address"
             autoCapitalize="none"
@@ -325,17 +316,18 @@ export default function CreatePatientScreen({
             onFocus={closeDropdowns}
           />
 
-          <Text style={styles.helper}>** Telefoon of email is verplicht</Text>
+          <Text style={styles.helper}>{t("patient.phoneOrEmailRequired")}</Text>
 
           {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
         </View>
+
         <View style={styles.field}>
-          <Text style={styles.label}>Gebruikersnaam</Text>
+          <Text style={styles.label}>{t("patient.username")}</Text>
 
           <TextInput
             value={formData.username}
             onChangeText={(v) => updateField("username", v)}
-            placeholder="Voer gebruikersnaam in"
+            placeholder={t("patient.usernamePlaceholder")}
             placeholderTextColor={COLORS.placeholder}
             autoCapitalize="none"
             style={styles.input}
@@ -347,7 +339,7 @@ export default function CreatePatientScreen({
       <View style={styles.footer}>
         <Button onPress={handleSubmit} style={styles.confirmBtn}>
           <View style={styles.confirmRow}>
-            <Text style={styles.confirmText}>Bevestigen</Text>
+            <Text style={styles.confirmText}>{t("patient.confirm")}</Text>
 
             <ChevronRight
               size={18}
