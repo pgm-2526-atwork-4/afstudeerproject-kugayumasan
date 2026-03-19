@@ -23,9 +23,14 @@ export type InteractionCardModel = {
 type Props = {
   interaction: InteractionCardModel;
   onPress: (id: string) => void;
+  onDelete?: (id: string) => void;
 };
 
-export default function InteractionCard({ interaction, onPress }: Props) {
+export default function InteractionCard({
+  interaction,
+  onPress,
+  onDelete,
+}: Props) {
   const c = getStatusColors(interaction.status);
 
   return (
@@ -42,11 +47,25 @@ export default function InteractionCard({ interaction, onPress }: Props) {
           <Text style={styles.provider}>{interaction.providerName}</Text>
         </View>
 
-        <Pill
-          label={interaction.status}
-          backgroundColor={c.bg}
-          textColor={c.text}
-        />
+        <View style={styles.rightSide}>
+          <Pill
+            label={interaction.status}
+            backgroundColor={c.bg}
+            textColor={c.text}
+          />
+
+          {onDelete && (
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                onDelete(interaction.id);
+              }}
+              style={styles.deleteButton}
+            >
+              <Text style={styles.deleteText}>Verwijder</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       <Text style={styles.summary}>{interaction.summary}</Text>
@@ -78,6 +97,22 @@ const styles = StyleSheet.create({
 
   meta: {
     flex: 1,
+  },
+
+  rightSide: {
+    alignItems: "flex-end",
+    gap: 6,
+  },
+
+  deleteButton: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+
+  deleteText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: COLORS.danger,
   },
 
   name: {

@@ -7,7 +7,7 @@ import {
   Keyboard,
   FlatList,
 } from "react-native";
-
+import { useTranslation } from "react-i18next";
 import Screen from "@design/ui/ScreenLayout";
 import ScreenHeader from "@design/ui/ScreenHeader";
 
@@ -31,6 +31,7 @@ type Props = {
   error?: string | null;
 
   onSearch?: (query: string) => void;
+  onDeleteInteraction: (id: string) => void;
 
   onNewInteraction: () => void;
   onViewInteraction: (id: string) => void;
@@ -42,14 +43,22 @@ export default function InteractionsScreen({
   error = null,
   onSearch = () => {},
   onNewInteraction,
+  onDeleteInteraction,
   onViewInteraction,
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
+  const { t } = useTranslation();
 
   const filtered = useMemo(() => interactions, [interactions]);
 
   function renderItem({ item }: { item: InteractionCardModel }) {
-    return <InteractionCard interaction={item} onPress={onViewInteraction} />;
+    return (
+      <InteractionCard
+        interaction={item}
+        onPress={onViewInteraction}
+        onDelete={onDeleteInteraction}
+      />
+    );
   }
 
   function renderContent() {
@@ -89,11 +98,7 @@ export default function InteractionsScreen({
   return (
     <Screen>
       <Pressable onPress={Keyboard.dismiss}>
-        {/* HEADER */}
-
-        <ScreenHeader title="Interacties" />
-
-        {/* CONTROLS */}
+        <ScreenHeader title={t("interactions.title")} />
 
         <View style={styles.controls}>
           <View style={styles.searchBox}>
@@ -110,14 +115,14 @@ export default function InteractionsScreen({
                 setSearchQuery(value);
                 onSearch(value);
               }}
-              placeholder="Zoek op naam"
+              placeholder={t("interactions.searchPlaceholder")}
               placeholderTextColor={COLORS.placeholder}
               style={styles.searchInput}
             />
           </View>
 
           <InteractionsPrimaryAction
-            title="Nieuwe interactie"
+            title={t("interactions.newInteraction")}
             onPress={onNewInteraction}
             icon={
               <Plus
@@ -130,7 +135,27 @@ export default function InteractionsScreen({
         </View>
       </Pressable>
 
-      {renderContent()}
+      {isLoading ? (
+        <View style={styles.stateWrap}>
+          <LoadingCard text={t("interactions.loading")} />
+        </View>
+      ) : error ? (
+        <EmptyState title={t("interactions.errorTitle")} description={error} />
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          title={t("interactions.emptyTitle")}
+          description={t("interactions.emptyDescription")}
+        />
+      ) : (
+        <FlatList
+          data={filtered}
+          keyExtractor={(item) => item.id}
+          renderItem={renderItem}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.list}
+          keyboardShouldPersistTaps="handled"
+        />
+      )}
     </Screen>
   );
 }

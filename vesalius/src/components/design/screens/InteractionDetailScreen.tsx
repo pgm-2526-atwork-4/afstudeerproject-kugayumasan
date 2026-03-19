@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
 import { ArrowLeft, Mic } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 import SummaryBlock from "@design/interactions/SummaryBlock";
 import TranscriptCollapse from "@design/interactions/TranscriptCollapse";
@@ -11,8 +12,12 @@ import type {
   InteractionStatus,
 } from "@design/interactions/InteractionCard";
 
+import { COLORS } from "@style/colors";
+import { SPACING } from "@style/spacing";
+import { RADIUS } from "@style/radius";
+
 type DetailInteraction = InteractionCardModel & {
-  dateLabel: string; // “13 februari 2026 om 10:30”
+  dateLabel: string;
   summary?: string | null;
   transcript?: string | null;
 };
@@ -21,25 +26,6 @@ type Props = {
   interaction: DetailInteraction;
   onBack: () => void;
   onAddNotes: (interactionId: string) => void;
-};
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-
-  successBg: "#D1FAE5",
-  success: "#37C18D",
-  warnBg: "#FFF6EA",
-  warn: "#F59E0C",
-  infoBg: "#CCF0FF",
-  info: "#0B759F",
-  errorBg: "#FFEAEA",
-  error: "#F50C0C",
-
-  placeholder: "#9AA4B2",
 };
 
 function getStatusColors(status: InteractionStatus) {
@@ -53,7 +39,7 @@ function getStatusColors(status: InteractionStatus) {
     case "Fout":
       return { bg: COLORS.errorBg, text: COLORS.error };
     default:
-      return { bg: COLORS.bgTint, text: COLORS.text };
+      return { bg: COLORS.background.tint, text: COLORS.text };
   }
 }
 
@@ -62,11 +48,11 @@ export default function InteractionDetailScreen({
   onBack,
   onAddNotes,
 }: Props) {
+  const { t } = useTranslation();
   const statusColors = getStatusColors(interaction.status);
 
   return (
     <Screen>
-      {/* Header (Figma-like) */}
       <View style={styles.header}>
         <Pressable
           onPress={onBack}
@@ -76,7 +62,7 @@ export default function InteractionDetailScreen({
           ]}
         >
           <ArrowLeft size={20} strokeWidth={1.5} color={COLORS.text} />
-          <Text style={styles.backText}>Terug</Text>
+          <Text style={styles.backText}>{t("interaction.back")}</Text>
         </Pressable>
 
         <View style={styles.headerMainRow}>
@@ -95,19 +81,16 @@ export default function InteractionDetailScreen({
         </View>
       </View>
 
-      {/* Content */}
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.stack}>
-          {/* Summary (always visible) */}
           <View>
-            <Text style={styles.sectionTitle}>Samenvatting</Text>
+            <Text style={styles.sectionTitle}>{t("interaction.summary")}</Text>
 
             <SummaryBlock
               summary={interaction.summary}
-              // when summary is null -> show “generating”
               isLoading={interaction.summary == null}
               variant={interaction.summary ? "summary" : "loading"}
             />
@@ -116,16 +99,19 @@ export default function InteractionDetailScreen({
               onPress={() => onAddNotes(interaction.id)}
               style={styles.addBtn}
               textStyle={styles.addBtnText}
-              title="Notities aanvullen"
+              title={t("interaction.addNotes")}
               leftIcon={
-                <Mic size={20} strokeWidth={1.5} color={COLORS.white} />
+                <Mic
+                  size={20}
+                  strokeWidth={1.5}
+                  color={COLORS.background.white}
+                />
               }
             />
           </View>
 
-          {/* Transcript (collapsible) */}
           <TranscriptCollapse
-            title="Transcript"
+            title={t("interaction.transcript")}
             transcript={interaction.transcript ?? null}
             isLoading={interaction.transcript == null}
             defaultCollapsed
@@ -138,18 +124,18 @@ export default function InteractionDetailScreen({
 
 const styles = StyleSheet.create({
   header: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    paddingBottom: 16,
+    paddingHorizontal: SPACING.xl,
+    paddingTop: SPACING.xl,
+    paddingBottom: SPACING.lg,
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
-    backgroundColor: COLORS.white,
-    gap: 12,
+    backgroundColor: COLORS.background.white,
+    gap: SPACING.md,
   },
   backBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: SPACING.sm,
     alignSelf: "flex-start",
   },
   backBtn__pressed: {
@@ -165,7 +151,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
-    gap: 12,
+    gap: SPACING.md,
   },
   headerMainLeft: {
     flex: 1,
@@ -174,7 +160,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "500",
     color: COLORS.text,
-    marginBottom: 4,
+    marginBottom: SPACING.xs,
   },
   headerSub: {
     fontSize: 12,
@@ -183,9 +169,9 @@ const styles = StyleSheet.create({
   },
 
   statusPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 15,
+    paddingHorizontal: SPACING.sm,
+    paddingVertical: SPACING.xs,
+    borderRadius: RADIUS.md,
     alignSelf: "flex-start",
   },
   statusText: {
@@ -194,18 +180,18 @@ const styles = StyleSheet.create({
   },
 
   content: {
-    paddingHorizontal: 24,
-    paddingVertical: 24,
+    paddingHorizontal: SPACING.xl,
+    paddingVertical: SPACING.xl,
   },
   stack: {
-    gap: 24,
+    gap: SPACING.xl,
   },
 
   sectionTitle: {
     fontSize: 14,
     fontWeight: "500",
     color: COLORS.text,
-    marginBottom: 12,
+    marginBottom: SPACING.md,
   },
 
   addBtn: {
@@ -214,15 +200,15 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderWidth: 1,
     borderColor: COLORS.border,
-    borderRadius: 15,
-    marginTop: 12,
+    borderRadius: RADIUS.md,
+    marginTop: SPACING.md,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
+    gap: SPACING.sm,
   },
   addBtnText: {
-    color: COLORS.white,
+    color: COLORS.background.white,
     fontSize: 14,
     fontWeight: "500",
   },

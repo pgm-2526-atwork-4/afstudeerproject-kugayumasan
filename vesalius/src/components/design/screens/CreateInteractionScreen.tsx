@@ -15,7 +15,7 @@ import type { Patient } from "@core/modules/patients/patients.types";
 import { COLORS } from "@style/colors";
 import { SPACING } from "@style/spacing";
 import { RADIUS } from "@style/radius";
-
+import { useTranslation } from "react-i18next";
 import LoadingCard from "@design/ui/LoadingCard";
 import EmptyState from "@design/ui/EmptyState";
 import ScreenHeader from "@design/ui/ScreenHeader";
@@ -56,10 +56,11 @@ export default function CreateInteractionScreen({
   const showResults = useMemo(() => {
     return !selectedPatient && searchQuery.trim().length > 0;
   }, [selectedPatient, searchQuery]);
+  const { t } = useTranslation();
 
   return (
     <Screen>
-      <ScreenHeader title="Nieuwe interactie" />
+      <ScreenHeader title={t("interaction.newTitle")} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -67,7 +68,7 @@ export default function CreateInteractionScreen({
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.section}>
-          <SectionHeader title="Zoek een patiënt of voeg een nieuwe toe" />
+          <SectionHeader title={t("interaction.searchOrCreate")} />
 
           {selectedPatient ? (
             <View style={styles.selectedPatient}>
@@ -75,7 +76,8 @@ export default function CreateInteractionScreen({
 
               <View style={{ flex: 1 }}>
                 <Text style={styles.patientName}>
-                  {getPatientName(selectedPatient) || "Onbekende patiënt"}
+                  {getPatientName(selectedPatient) ||
+                    t("interaction.unknownPatient")}
                 </Text>
 
                 <Text style={styles.patientNrn}>
@@ -106,7 +108,7 @@ export default function CreateInteractionScreen({
                     setSearchQuery(value);
                     onSearchPatients(value);
                   }}
-                  placeholder="Patiënt zoeken..."
+                  placeholder={t("interaction.searchPlaceholder")}
                   placeholderTextColor={COLORS.placeholder}
                   style={styles.searchInput}
                 />
@@ -115,7 +117,7 @@ export default function CreateInteractionScreen({
               {showResults ? (
                 <View style={styles.list}>
                   {isLoading ? (
-                    <LoadingCard text="Patiënten laden..." />
+                    <LoadingCard text={t("interaction.loadingPatients")} />
                   ) : error ? (
                     <EmptyState title={error} />
                   ) : patients.length > 0 ? (
@@ -131,7 +133,7 @@ export default function CreateInteractionScreen({
                       />
                     ))
                   ) : (
-                    <EmptyState title="Geen patiënten gevonden" />
+                    <EmptyState title={t("interaction.noPatients")} />
                   )}
                 </View>
               ) : null}
@@ -148,7 +150,9 @@ export default function CreateInteractionScreen({
           >
             <View style={styles.btnRow}>
               <Plus size={18} strokeWidth={1.5} style={styles.iconFix} />
-              <Text style={styles.btnRowText}>Voeg nieuwe patiënt toe</Text>
+              <Text style={styles.btnRowText}>
+                {t("interaction.addPatient")}
+              </Text>
             </View>
           </Button>
 
@@ -157,7 +161,7 @@ export default function CreateInteractionScreen({
             onPress={() => onStartRecording(null, true)}
             style={{ width: "100%" }}
           >
-            <Text style={styles.btnRowText}>Anonieme interactie</Text>
+            <Text style={styles.btnRowText}>{t("interaction.anonymous")}</Text>
           </Button>
         </View>
       </ScrollView>
@@ -171,7 +175,7 @@ export default function CreateInteractionScreen({
           disabled={!selectedPatient}
           style={styles.startBtn}
           textStyle={styles.startBtnText}
-          title="Start opname"
+          title={t("interaction.startRecording")}
         />
 
         <Pressable
@@ -181,7 +185,7 @@ export default function CreateInteractionScreen({
             pressed && styles.cancelBtnPressed,
           ]}
         >
-          <Text style={styles.cancelText}>Annuleren</Text>
+          <Text style={styles.cancelText}>{t("interaction.cancel")}</Text>
         </Pressable>
       </View>
     </Screen>
