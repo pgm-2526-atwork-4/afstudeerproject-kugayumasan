@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import Screen from "@design/ui/ScreenLayout";
 import ScreenHeader from "@design/ui/ScreenHeader";
@@ -14,11 +14,22 @@ import {
 import { COLORS } from "@style/colors";
 import { SPACING } from "@style/spacing";
 import { RADIUS } from "@style/radius";
+import { useTranslation } from "react-i18next";
+
+type SelectKey = "language" | "org" | null;
 
 type Props = {
   onLogout: () => void;
   profileName?: string;
   profileEmail?: string;
+
+  language: string;
+  organization: string;
+  openSelect: SelectKey;
+
+  setOpenSelect: React.Dispatch<React.SetStateAction<SelectKey>>;
+  onChangeLanguage: (v: string) => void;
+  onChangeOrganization: (v: string) => void;
 };
 
 type Option = { label: string; value: string };
@@ -140,14 +151,18 @@ export default function SettingsScreen({
   onLogout,
   profileName,
   profileEmail,
+  language,
+  organization,
+  openSelect,
+  setOpenSelect,
+  onChangeLanguage,
+  onChangeOrganization,
 }: Props) {
-  const [language, setLanguage] = useState("nl");
-  const [organization, setOrganization] = useState("metro-hospital");
-  const [openSelect, setOpenSelect] = useState<null | "language" | "org">(null);
+  const { t } = useTranslation();
 
   return (
     <Screen>
-      <ScreenHeader title="Instellingen" />
+      <ScreenHeader title={t("settings.title")} />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -174,12 +189,12 @@ export default function SettingsScreen({
                 color={COLORS.text}
                 style={{ opacity: 0.6 }}
               />
-              <Text style={styles.labelText}>Taal</Text>
+              <Text style={styles.labelText}>{t("settings.language")}</Text>
             </View>
 
             <InlineSelect
-              headerTitle="Selecteer taal"
-              placeholder="Selecteer taal"
+              headerTitle={t("settings.selectLanguage")}
+              placeholder={t("settings.selectLanguage")}
               value={language}
               options={LANGUAGE_OPTIONS}
               open={openSelect === "language"}
@@ -187,7 +202,7 @@ export default function SettingsScreen({
                 setOpenSelect((p) => (p === "language" ? null : "language"))
               }
               onPick={(v) => {
-                setLanguage(v);
+                onChangeLanguage(v);
                 setOpenSelect(null);
               }}
               onClose={() => setOpenSelect(null)}
@@ -202,12 +217,12 @@ export default function SettingsScreen({
                 color={COLORS.text}
                 style={{ opacity: 0.6 }}
               />
-              <Text style={styles.labelText}>Organisatie</Text>
+              <Text style={styles.labelText}>{t("settings.organization")}</Text>
             </View>
 
             <InlineSelect
-              headerTitle="Selecteer organisatie"
-              placeholder="Selecteer organisatie"
+              headerTitle={t("settings.selectOrganization")}
+              placeholder={t("settings.selectOrganization")}
               value={organization}
               options={ORG_OPTIONS}
               open={openSelect === "org"}
@@ -215,7 +230,7 @@ export default function SettingsScreen({
                 setOpenSelect((p) => (p === "org" ? null : "org"))
               }
               onPick={(v) => {
-                setOrganization(v);
+                onChangeOrganization(v);
                 setOpenSelect(null);
               }}
               onClose={() => setOpenSelect(null)}
@@ -238,7 +253,7 @@ export default function SettingsScreen({
           textStyle={{ color: COLORS.error, fontWeight: "500" }}
         >
           <LogOut size={18} strokeWidth={1.5} color={COLORS.error} />
-          <Text style={{ marginLeft: SPACING.sm }}>Uitloggen</Text>
+          <Text style={{ marginLeft: SPACING.sm }}>{t("settings.logout")}</Text>
         </Button>
       </View>
     </Screen>
