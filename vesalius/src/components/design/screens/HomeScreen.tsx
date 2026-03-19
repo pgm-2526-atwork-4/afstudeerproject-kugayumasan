@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
 import { Plus, Search } from "lucide-react-native";
+import { useTranslation } from "react-i18next";
 
 import Screen from "@design/ui/ScreenLayout";
 
@@ -30,10 +31,12 @@ export default function HomeScreen({
   onViewAllInteractions,
   onViewInteraction,
 }: Props) {
+  const { t } = useTranslation();
+
   return (
     <Screen>
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Home</Text>
+        <Text style={styles.headerTitle}>{t("home.title")}</Text>
       </View>
 
       <ScrollView
@@ -43,7 +46,7 @@ export default function HomeScreen({
         {/* QUICK ACTIONS */}
 
         <View>
-          <Text style={styles.sectionLabel}>SNELLE ACTIES</Text>
+          <Text style={styles.sectionLabel}>{t("home.quickActions")}</Text>
 
           <View style={styles.stack}>
             <Pressable
@@ -57,7 +60,7 @@ export default function HomeScreen({
                 <Plus size={20} color={COLORS.text} strokeWidth={1.5} />
               </View>
 
-              <Text style={styles.actionText}>Nieuwe interactie</Text>
+              <Text style={styles.actionText}>{t("home.newInteraction")}</Text>
             </Pressable>
 
             <Pressable
@@ -71,7 +74,9 @@ export default function HomeScreen({
                 <Search size={20} color={COLORS.text} strokeWidth={1.5} />
               </View>
 
-              <Text style={styles.actionText}>Zoek interactie</Text>
+              <Text style={styles.actionText}>
+                {t("home.searchInteraction")}
+              </Text>
             </Pressable>
           </View>
         </View>
@@ -79,7 +84,7 @@ export default function HomeScreen({
         {/* UPCOMING */}
 
         <View>
-          <Text style={styles.sectionLabel}>AANKOMENDE AFSPRAAK</Text>
+          <Text style={styles.sectionLabel}>{t("home.upcoming")}</Text>
 
           <UpcomingInteractionCard
             upcoming={upcoming}
@@ -90,7 +95,7 @@ export default function HomeScreen({
         {/* RECENT */}
 
         <View>
-          <Text style={styles.sectionLabel}>RECENT BEKEKEN</Text>
+          <Text style={styles.sectionLabel}>{t("home.recent")}</Text>
 
           <RecentInteractionsList
             interactions={recent}
