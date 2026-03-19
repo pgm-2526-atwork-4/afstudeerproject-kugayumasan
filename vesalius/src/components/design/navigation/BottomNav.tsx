@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Home, Mic, FileText, Settings } from "lucide-react-native";
-
+import { useTranslation } from "react-i18next";
 import { COLORS } from "@style/colors";
 import { SPACING } from "@style/spacing";
 
@@ -21,6 +21,8 @@ const TABS = [
 ] as const;
 
 export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
+  const { t } = useTranslation();
+
   return (
     <SafeAreaView edges={["bottom"]} style={styles.bottomNav}>
       <View style={styles.bottomNav__inner}>
@@ -49,7 +51,7 @@ export default function BottomNav({ activeTab, onTabChange }: BottomNavProps) {
                     : styles.bottomNav__labelInactive,
                 ]}
               >
-                {tab.label}
+                {t(`tabs.${tab.id}`)}
               </Text>
             </Pressable>
           );
