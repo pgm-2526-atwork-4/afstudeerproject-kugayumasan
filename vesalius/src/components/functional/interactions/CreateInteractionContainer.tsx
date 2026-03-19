@@ -1,12 +1,18 @@
 import React, { useCallback, useRef } from "react";
 import { router, useLocalSearchParams } from "expo-router";
+
 import CreateInteractionScreen from "@design/screens/CreateInteractionScreen";
+
 import { useSession } from "@core/modules/session/session.context";
 import { usePatientSearch } from "@functional/patients/usePatientSearch";
+
+import { conversationService } from "@core/modules/interactions/conversations.service";
+
 import type { Patient } from "@core/modules/patients/patients.types";
 
 export default function CreateInteractionContainer() {
-  const { selectedInstitutionId } = useSession();
+  const { selectedInstitutionId, doctorId } = useSession();
+
   const { patients, isLoading, error, searchPatients, clearResults } =
     usePatientSearch();
 
@@ -34,9 +40,7 @@ export default function CreateInteractionContainer() {
 
   const handleSearchPatients = useCallback(
     (query: string) => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current);
-      }
+      if (debounceRef.current) clearTimeout(debounceRef.current);
 
       const trimmed = query.trim();
 
@@ -58,26 +62,30 @@ export default function CreateInteractionContainer() {
   );
 
   const handleStartRecording = useCallback(
-    (patient: Patient | null, isAnonymous: boolean) => {
-      if (isAnonymous) {
-        router.push("/(app)/interactions/record/anonymous");
-        return;
+    async (patient: Patient | null) => {
+      try {
+        if (!selectedInstitutionId || !doctorId) {
+          console.log("Missing institutionId or doctorId");
+          return;
+        }
+
+        if (!patient?.id) {
+          console.log("Patient must be selected");
+          return;
+        }
+
+        const conversation = await conversationService.create({
+          patient_id: patient.id,
+          institution_id: selectedInstitutionId,
+          doctor_id: doctorId,
+        });
+
+        router.push(`/(app)/interactions/record/${conversation.id}`);
+      } catch (error) {
+        console.error("Failed creating conversation", error);
       }
-
-      if (!patient) return;
-
-      router.push({
-        pathname: "/(app)/interactions/record/selected",
-        params: {
-          patientId: patient.id,
-          patientName: [patient.first_name, patient.last_name]
-            .filter(Boolean)
-            .join(" ")
-            .trim(),
-        },
-      });
     },
-    [],
+    [selectedInstitutionId, doctorId],
   );
 
   return (
@@ -88,12 +96,10 @@ export default function CreateInteractionContainer() {
       error={error}
       onSearchPatients={handleSearchPatients}
       onStartRecording={handleStartRecording}
-      onBack={() => {
-        router.replace("/(app)/(tabs)/home");
-      }}
-      onCreatePatient={() => {
-        router.push("/(app)/interactions/new/create-patient");
-      }}
+      onBack={() => router.replace("/(app)/(tabs)/home")}
+      onCreatePatient={() =>
+        router.push("/(app)/interactions/new/create-patient")
+      }
     />
   );
 }

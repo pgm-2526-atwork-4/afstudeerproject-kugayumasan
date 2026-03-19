@@ -4,6 +4,8 @@ import InteractionsScreen from "@design/screens/InteractionsScreen";
 import { useSession } from "@core/modules/session/session.context";
 import { useInteractions } from "@functional/interactions/useInteractions";
 import type { InteractionCardModel } from "@design/interactions/InteractionCard";
+import { Alert } from "react-native";
+import { deleteInteraction } from "@core/modules/interactions/interactions.service";
 
 function formatPatientName(interaction: {
   patient: {
@@ -104,6 +106,33 @@ export default function InteractionsContainer() {
     loadInteractions(selectedInstitutionId);
   }, [loadInteractions, selectedInstitutionId]);
 
+  const handleDeleteInteraction = useCallback(
+    (id: string) => {
+      Alert.alert(
+        "Interactie verwijderen",
+        "Ben je zeker dat je deze interactie wil verwijderen?",
+        [
+          { text: "Annuleren", style: "cancel" },
+          {
+            text: "Verwijderen",
+            style: "destructive",
+            onPress: async () => {
+              try {
+                await deleteInteraction(id);
+                if (selectedInstitutionId) {
+                  loadInteractions(selectedInstitutionId);
+                }
+              } catch {
+                Alert.alert("Fout", "Verwijderen mislukt");
+              }
+            },
+          },
+        ],
+      );
+    },
+    [loadInteractions, selectedInstitutionId],
+  );
+
   const handleSearch = useCallback(
     (query: string) => {
       if (debounceRef.current) {
@@ -147,6 +176,7 @@ export default function InteractionsContainer() {
       onSearch={handleSearch}
       onNewInteraction={() => router.push("/(app)/(tabs)/record")}
       onViewInteraction={(id) => router.push(`/(app)/interactions/${id}`)}
+      onDeleteInteraction={handleDeleteInteraction}
     />
   );
 }
