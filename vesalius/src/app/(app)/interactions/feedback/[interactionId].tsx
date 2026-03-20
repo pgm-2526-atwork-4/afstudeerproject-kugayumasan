@@ -1,5 +1,6 @@
 import React from "react";
 import { router, useLocalSearchParams } from "expo-router";
+
 import RecordingFeedbackScreen from "@design/screens/RecordingFeedbackScreen";
 
 export default function InteractionFeedbackRoute() {
@@ -18,11 +19,9 @@ export default function InteractionFeedbackRoute() {
         router.replace(`/(app)/interactions/record/${interactionId}`);
       }}
       onGoBack={() => {
-        // back to overview tab (record)
         router.replace("/(app)/(tabs)/record");
       }}
       onGoToInteraction={() => {
-        // on success auto-redirect here after 2s
         router.replace(`/(app)/interactions/${interactionId}`);
       }}
     />
