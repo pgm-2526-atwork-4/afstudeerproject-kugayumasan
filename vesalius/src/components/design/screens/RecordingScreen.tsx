@@ -1,22 +1,30 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
+
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
+
 import { Square, Mic } from "lucide-react-native";
+
+import { COLORS } from "@style/colors";
 
 type Props = {
   patientName: string;
+  isRecording: boolean;
+  elapsed: number;
+  onStartRecording: () => void;
   onStopRecording: () => void;
   onBack: () => void;
 };
 
 export default function RecordingScreen({
   patientName,
+  isRecording,
+  elapsed,
+  onStartRecording,
   onStopRecording,
   onBack,
 }: Props) {
-  const [seconds, setSeconds] = useState(0);
-  const [isRecording, setIsRecording] = useState(false);
   const [waveformBars, setWaveformBars] = useState<number[]>(
     Array.from({ length: 30 }, () => Math.random()),
   );
@@ -29,30 +37,30 @@ export default function RecordingScreen({
     const hours = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
+
     const hh = String(hours).padStart(2, "0");
     const mm = String(mins).padStart(2, "0");
     const ss = String(secs).padStart(2, "0");
+
     return `${hh}:${mm}:${ss}`;
   };
 
   useEffect(() => {
     if (!isRecording) return;
-    const interval = setInterval(() => setSeconds((p) => p + 1), 1000);
-    return () => clearInterval(interval);
-  }, [isRecording]);
 
-  useEffect(() => {
-    if (!isRecording) return;
     const interval = setInterval(() => {
       setWaveformBars((prev) => {
         const next = [...prev];
+
         for (let i = 0; i < 5; i++) {
           const idx = Math.floor(Math.random() * next.length);
           next[idx] = Math.random();
         }
+
         return next;
       });
     }, 100);
+
     return () => clearInterval(interval);
   }, [isRecording]);
 
@@ -88,23 +96,14 @@ export default function RecordingScreen({
       a1.stop();
       a2.stop();
       a3.stop();
+
       dot1.setValue(0.3);
       dot2.setValue(0.3);
       dot3.setValue(0.3);
     };
-  }, [isRecording, dot1, dot2, dot3]);
+  }, [isRecording]);
 
   const bars = useMemo(() => waveformBars, [waveformBars]);
-
-  const handleStartRecording = () => {
-    setSeconds(0);
-    setIsRecording(true);
-  };
-
-  const handleStopRecording = () => {
-    setIsRecording(false);
-    onStopRecording();
-  };
 
   return (
     <Screen>
@@ -126,13 +125,13 @@ export default function RecordingScreen({
             <Mic
               size={48}
               strokeWidth={1.5}
-              color={isRecording ? COLORS.white : COLORS.text}
+              color={isRecording ? COLORS.background.white : COLORS.text}
               style={{ opacity: isRecording ? 1 : 0.4 }}
             />
           </View>
         </View>
 
-        <Text style={styles.record__timer}>{formatTime(seconds)}</Text>
+        <Text style={styles.record__timer}>{formatTime(elapsed)}</Text>
 
         {isRecording && (
           <View style={styles.record__waveform}>
@@ -164,14 +163,14 @@ export default function RecordingScreen({
         {!isRecording ? (
           <>
             <Button
-              onPress={handleStartRecording}
+              onPress={onStartRecording}
               style={[styles.record__btn, styles["record__btn--start"]]}
             >
               <View style={styles.btnRow}>
                 <Mic
                   size={20}
                   strokeWidth={1.5}
-                  color={COLORS.white}
+                  color={COLORS.background.white}
                   style={styles.iconFix}
                 />
                 <Text style={[styles.btnLabel, styles.btnLabelLight]}>
@@ -191,14 +190,14 @@ export default function RecordingScreen({
         ) : (
           <Button
             variant="outline"
-            onPress={handleStopRecording}
+            onPress={onStopRecording}
             style={[styles.record__btn, styles["record__btn--stop"]]}
           >
             <View style={styles.btnRow}>
               <Square
                 size={20}
                 strokeWidth={1.5}
-                color={COLORS.destructive}
+                color={COLORS.error}
                 style={styles.iconFix}
               />
               <Text style={[styles.btnLabel, styles.btnLabelDanger]}>
@@ -211,15 +210,6 @@ export default function RecordingScreen({
     </Screen>
   );
 }
-
-const COLORS = {
-  primary: "#20BBC0",
-  bgTint: "#EBF6F8",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-  destructive: "#F50C0C",
-};
 
 const styles = StyleSheet.create({
   record__header: {
@@ -292,7 +282,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 15,
-    backgroundColor: COLORS.bgTint,
+    backgroundColor: COLORS.background.tint,
   },
   record__dots: { flexDirection: "row", gap: 6 },
   record__dot: {
@@ -324,15 +314,15 @@ const styles = StyleSheet.create({
   },
   "record__btn--secondary": {
     height: 44,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background.white,
     borderWidth: 1,
     borderColor: COLORS.border,
   },
   "record__btn--stop": {
     height: 56,
-    backgroundColor: COLORS.white,
+    backgroundColor: COLORS.background.white,
     borderWidth: 2,
-    borderColor: COLORS.destructive,
+    borderColor: COLORS.error,
   },
 
   record__btnSecondaryText: {
@@ -341,20 +331,22 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // shared row layout for icon + label
   btnRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
+
   iconFix: {
     marginTop: 1,
   },
+
   btnLabel: {
     marginLeft: 8,
     fontSize: 14,
     fontWeight: "600",
   },
-  btnLabelLight: { color: COLORS.white },
-  btnLabelDanger: { color: COLORS.destructive },
+
+  btnLabelLight: { color: COLORS.background.white },
+  btnLabelDanger: { color: COLORS.error },
 });
