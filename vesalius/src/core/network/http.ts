@@ -136,4 +136,7 @@ export const http = {
   patch<T>(path: string, body?: unknown, headers?: Record<string, string>) {
     return this.request<T>({ method: "PATCH", path, body, headers });
   },
+  delete<T>(path: string, body?: unknown, headers?: Record<string, string>) {
+    return this.request<T>({ method: "DELETE", path, body, headers });
+  },
 };
