@@ -1,8 +1,12 @@
 import React, { useEffect, useRef } from "react";
 import { View, Text, StyleSheet, Animated } from "react-native";
+
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
+
 import { CheckCircle2, XCircle } from "lucide-react-native";
+
+import { COLORS } from "@style/colors";
 
 type Props = {
   status: "success" | "error";
@@ -17,7 +21,6 @@ export default function RecordingFeedbackScreen({
   onRetry,
   onGoToInteraction,
 }: Props) {
-  // Auto-redirect on success after 2 seconds
   useEffect(() => {
     if (status === "success" && onGoToInteraction) {
       const timer = setTimeout(() => onGoToInteraction(), 2000);
@@ -25,7 +28,6 @@ export default function RecordingFeedbackScreen({
     }
   }, [status, onGoToInteraction]);
 
-  // Animated dots for success
   const d1 = useRef(new Animated.Value(0.3)).current;
   const d2 = useRef(new Animated.Value(0.3)).current;
   const d3 = useRef(new Animated.Value(0.3)).current;
@@ -62,19 +64,18 @@ export default function RecordingFeedbackScreen({
       a1.stop();
       a2.stop();
       a3.stop();
+
       d1.setValue(0.3);
       d2.setValue(0.3);
       d3.setValue(0.3);
     };
-  }, [status, d1, d2, d3]);
+  }, [status]);
 
   const isSuccess = status === "success";
 
   return (
     <Screen>
-      {/* recordFeedback__content */}
       <View style={styles.recordFeedback__content}>
-        {/* recordFeedback__icon */}
         <View style={styles.recordFeedback__icon}>
           {isSuccess ? (
             <View
@@ -96,16 +97,16 @@ export default function RecordingFeedbackScreen({
                 styles["recordFeedback__iconBox--error"],
               ]}
             >
-              <XCircle size={64} strokeWidth={1.5} color={COLORS.destructive} />
+              <XCircle size={64} strokeWidth={1.5} color={COLORS.error} />
             </View>
           )}
         </View>
 
-        {/* recordFeedback__message */}
         <View style={styles.recordFeedback__message}>
           <Text style={styles.recordFeedback__title}>
             {isSuccess ? "Opname verzonden" : "Upload mislukt"}
           </Text>
+
           <Text style={styles.recordFeedback__subtitle}>
             {isSuccess
               ? "Verwerking gestart."
@@ -113,8 +114,7 @@ export default function RecordingFeedbackScreen({
           </Text>
         </View>
 
-        {/* recordFeedback__redirect indicator */}
-        {isSuccess ? (
+        {isSuccess && (
           <View style={styles.recordFeedback__redirect}>
             <View style={styles.recordFeedback__dots}>
               <Animated.View
@@ -128,11 +128,10 @@ export default function RecordingFeedbackScreen({
               />
             </View>
           </View>
-        ) : null}
+        )}
       </View>
 
-      {/* recordFeedback__footer (only error) */}
-      {!isSuccess ? (
+      {!isSuccess && (
         <View style={styles.recordFeedback__footer}>
           <Button
             onPress={onRetry}
@@ -140,6 +139,7 @@ export default function RecordingFeedbackScreen({
             textStyle={styles.recordFeedback__primaryText}
             title="Opnieuw proberen"
           />
+
           <Button
             variant="outline"
             onPress={onGoBack}
@@ -148,21 +148,10 @@ export default function RecordingFeedbackScreen({
             title="Terug naar overzicht"
           />
         </View>
-      ) : null}
+      )}
     </Screen>
   );
 }
-
-const COLORS = {
-  primary: "#20BBC0",
-  text: "#2A3A51",
-  border: "#E7E7E7",
-  white: "#FFFFFF",
-  success: "#37C18D",
-  successBg: "#D1FAE5",
-  destructive: "#F50C0C",
-  destructiveBg: "#FFEAEA",
-};
 
 const styles = StyleSheet.create({
   recordFeedback__content: {
@@ -176,6 +165,7 @@ const styles = StyleSheet.create({
   recordFeedback__icon: {
     marginBottom: 32,
   },
+
   recordFeedback__iconBox: {
     width: 96,
     height: 96,
@@ -183,17 +173,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   "recordFeedback__iconBox--success": {
     backgroundColor: COLORS.successBg,
   },
+
   "recordFeedback__iconBox--error": {
-    backgroundColor: COLORS.destructiveBg,
+    backgroundColor: COLORS.errorBg,
   },
 
   recordFeedback__message: {
     alignItems: "center",
     maxWidth: 320,
   },
+
   recordFeedback__title: {
     color: COLORS.text,
     fontSize: 20,
@@ -201,6 +194,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     textAlign: "center",
   },
+
   recordFeedback__subtitle: {
     color: COLORS.text,
     opacity: 0.8,
@@ -212,10 +206,12 @@ const styles = StyleSheet.create({
   recordFeedback__redirect: {
     marginTop: 24,
   },
+
   recordFeedback__dots: {
     flexDirection: "row",
     gap: 8,
   },
+
   recordFeedback__dot: {
     width: 6,
     height: 6,
@@ -237,8 +233,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: 15,
   },
+
   recordFeedback__primaryText: {
-    color: COLORS.white,
+    color: COLORS.background.white,
     fontSize: 14,
     fontWeight: "600",
   },
@@ -248,6 +245,7 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: 15,
   },
+
   recordFeedback__secondaryText: {
     color: COLORS.text,
     fontSize: 12,
