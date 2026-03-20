@@ -1,9 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, Pressable, Keyboard } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Keyboard,
+  Image,
+  Linking,
+} from "react-native";
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
 import FormField from "@design/ui/FormField";
-import { Activity } from "lucide-react-native";
 import { COLORS } from "@style/colors";
 import { SPACING } from "@style/spacing";
 import { RADIUS } from "@style/radius";
@@ -24,23 +31,29 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
     onLogin(username, password);
   };
 
+  const handleForgotPassword = () => {
+    Linking.openURL("https://vesalius.ai/forgot-password");
+  };
+
+  const handleForgotUsername = () => {
+    Linking.openURL("https://vesalius.ai/forgot-username");
+  };
+
   return (
     <Screen>
       <Pressable style={styles.pressable} onPress={Keyboard.dismiss}>
         <View style={styles.login}>
           <View style={styles.login__content}>
+            {/* LOGO */}
             <View style={styles.login__brandRow}>
-              <View style={styles.login__logo}>
-                <Activity
-                  size={28}
-                  strokeWidth={2}
-                  color={COLORS.background.white}
-                />
-              </View>
-              <Text style={styles.login__brandText}>Vesalius.ai</Text>
+              <Image
+                source={require("@assets/images/logo.png")}
+                style={styles.login__logoImage}
+                resizeMode="contain"
+              />
             </View>
 
-            <Text style={styles.login__welcome}>Welkom terug</Text>
+            <Text style={styles.login__welcome}>Welkom bij Vesalius</Text>
 
             <View style={styles.login__form}>
               <FormField
@@ -69,13 +82,15 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
                 }}
               />
 
+              {/* LINKS */}
               <View style={styles.login__links}>
-                <Pressable onPress={() => {}}>
+                <Pressable onPress={handleForgotUsername}>
                   <Text style={styles.login__link}>
                     Gebruikersnaam vergeten?
                   </Text>
                 </Pressable>
-                <Pressable onPress={() => {}}>
+
+                <Pressable onPress={handleForgotPassword}>
                   <Text style={styles.login__link}>Wachtwoord vergeten?</Text>
                 </Pressable>
               </View>
@@ -125,26 +140,14 @@ const styles = StyleSheet.create({
   },
 
   login__brandRow: {
-    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    gap: SPACING.md,
-    marginBottom: SPACING.md,
+    marginBottom: SPACING.lg,
   },
 
-  login__logo: {
-    width: 48,
-    height: 48,
-    borderRadius: RADIUS.md,
-    backgroundColor: COLORS.primary,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-
-  login__brandText: {
-    fontSize: 24,
-    color: COLORS.text,
-    fontWeight: "400",
+  login__logoImage: {
+    width: 200,
+    height: 70,
   },
 
   login__welcome: {
