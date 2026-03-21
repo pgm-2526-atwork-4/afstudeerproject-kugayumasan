@@ -1,17 +1,16 @@
-import React, { useState, useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { router } from "expo-router";
+import { Audio } from "expo-av";
+import Voice from "@react-native-voice/voice";
 
 import RecordingScreen from "@design/screens/RecordingScreen";
 
-import { createSpeechRecognizer } from "@core/modules/recording/speech.service";
 import {
-  createChatSocket,
+  createTranscript,
+  finalizeTranscript,
   sendTranscriptChunk,
-} from "@core/modules/recording/websocket.service";
-import { getConversation } from "@core/modules/recording/recording.service";
-import { getTokens } from "@core/modules/auth/auth.storage";
-
-import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
+  TranscriptSession,
+} from "@core/modules/recording/recording.service";
 
 type Props = {
   conversationId: string;
@@ -24,81 +23,110 @@ export default function RecordingContainer({
 }: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [liveText, setLiveText] = useState("");
 
+  const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null);
-  const socketRef = useRef<WebSocket | null>(null);
+  const transcriptRef = useRef<TranscriptSession | null>(null);
 
-  const speechToken = "AZURE_TOKEN"; // later from backend
-  const region = "westeurope";
-  const language = "nl-BE";
+  /* --------------------------
+     SPEECH EVENTS
+  -------------------------- */
+
+  useEffect(() => {
+    Voice.onSpeechResults = async (event: any) => {
+      const text = event.value?.[0];
+
+      if (!text || !transcriptRef.current) return;
+
+      console.log("LIVE TEXT:", text);
+
+      setLiveText(text);
+
+      try {
+        await sendTranscriptChunk(
+          conversationId,
+          transcriptRef.current.id,
+          text,
+        );
+      } catch (e) {
+        console.error("Chunk send failed", e);
+      }
+    };
+
+    Voice.onSpeechError = (e: any) => {
+      console.error("Speech error", e);
+    };
+
+    return () => {
+      Voice.destroy().then(Voice.removeAllListeners);
+    };
+  }, []);
+
+  /* --------------------------
+     START
+  -------------------------- */
 
   async function handleStartRecording() {
     try {
-      const conversation = await getConversation(conversationId);
+      const permission = await Audio.requestPermissionsAsync();
 
-      if (!conversation.chat_url) {
-        console.error("No chat_url available");
-        return;
-      }
+      if (!permission.granted) return;
 
-      const tokens = await getTokens();
-
-      if (!tokens?.accessToken) {
-        console.error("No auth token available");
-        return;
-      }
-
-      const authToken = tokens.accessToken;
-
-      const socket = createChatSocket(conversation.chat_url, authToken, {
-        onOpen: () => {
-          console.log("CHAT SOCKET READY");
-        },
-        onMessage: (data) => {
-          console.log("CHAT MESSAGE", data);
-        },
+      await Audio.setAudioModeAsync({
+        allowsRecordingIOS: true,
+        playsInSilentModeIOS: true,
       });
 
-      socketRef.current = socket;
+      const recording = new Audio.Recording();
 
-      const recognizer = createSpeechRecognizer(speechToken, region, language, {
-        onRecognized: (text) => {
-          console.log("TRANSCRIPT CHUNK:", text);
+      await recording.prepareToRecordAsync(
+        Audio.RecordingOptionsPresets.HIGH_QUALITY,
+      );
 
-          if (socketRef.current) {
-            sendTranscriptChunk(socketRef.current, text);
-          }
-        },
-      });
+      await recording.startAsync();
 
-      recognizer.startContinuousRecognitionAsync();
-
-      recognizerRef.current = recognizer;
+      recordingRef.current = recording;
 
       timerRef.current = setInterval(() => {
         setElapsed((t) => t + 1);
       }, 1000);
 
       setIsRecording(true);
+
+      const transcript = await createTranscript(conversationId);
+      transcriptRef.current = transcript;
+
+      /* 🔥 START SPEECH */
+      await Voice.start("nl-BE");
     } catch (err) {
-      console.error("Failed starting recording", err);
+      console.error("Start recording failed", err);
     }
   }
 
-  function handleStopRecording() {
+  /* --------------------------
+     STOP
+  -------------------------- */
+
+  async function handleStopRecording() {
     try {
+      if (!recordingRef.current || !transcriptRef.current) return;
+
       if (timerRef.current) clearInterval(timerRef.current);
 
-      recognizerRef.current?.stopContinuousRecognitionAsync(() => {
-        recognizerRef.current?.close();
-        recognizerRef.current = null;
-      });
+      await recordingRef.current.stopAndUnloadAsync();
 
-      socketRef.current?.close();
-      socketRef.current = null;
+      recordingRef.current = null;
 
       setIsRecording(false);
+
+      /* 🔥 STOP SPEECH */
+      await Voice.stop();
+
+      /* FINALIZE */
+      await finalizeTranscript(conversationId, transcriptRef.current.id);
+
+      console.log("Recording complete");
 
       router.replace({
         pathname: `/(app)/interactions/feedback/${conversationId}`,
@@ -114,6 +142,7 @@ export default function RecordingContainer({
       patientName={patientName}
       isRecording={isRecording}
       elapsed={elapsed}
+      liveText={liveText}
       onStartRecording={handleStartRecording}
       onStopRecording={handleStopRecording}
       onBack={() => router.back()}
