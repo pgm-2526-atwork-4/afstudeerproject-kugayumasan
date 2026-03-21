@@ -27,7 +27,9 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
 
       const transcript = conversation.transcripts?.[0]?.transcript_text ?? "";
 
-      const summary = conversation.consultation_notes ?? "";
+      const summary =
+        conversation.consultation_notes ??
+        (conversation.summary ? JSON.stringify(conversation.summary) : "");
 
       setInteraction({
         id: interactionId,
