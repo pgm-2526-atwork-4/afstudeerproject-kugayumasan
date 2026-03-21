@@ -6,7 +6,6 @@ import {
   Pressable,
   Keyboard,
   Image,
-  Linking,
 } from "react-native";
 import Screen from "@design/ui/ScreenLayout";
 import { Button } from "@design/ui/button";
@@ -29,14 +28,6 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
     if (!username || !password) return;
     Keyboard.dismiss();
     onLogin(username, password);
-  };
-
-  const handleForgotPassword = () => {
-    Linking.openURL("https://vesalius.ai/forgot-password");
-  };
-
-  const handleForgotUsername = () => {
-    Linking.openURL("https://vesalius.ai/forgot-username");
   };
 
   return (
@@ -81,19 +72,6 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
                   onSubmitEditing: handleLogin,
                 }}
               />
-
-              {/* LINKS */}
-              <View style={styles.login__links}>
-                <Pressable onPress={handleForgotUsername}>
-                  <Text style={styles.login__link}>
-                    Gebruikersnaam vergeten?
-                  </Text>
-                </Pressable>
-
-                <Pressable onPress={handleForgotPassword}>
-                  <Text style={styles.login__link}>Wachtwoord vergeten?</Text>
-                </Pressable>
-              </View>
 
               {error ? <Text style={styles.login__error}>{error}</Text> : null}
 
