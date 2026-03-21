@@ -9,7 +9,7 @@ export function createSpeechRecognizer(
   region: string,
   language: string,
   handlers: SpeechHandlers,
-) {
+): SpeechSDK.SpeechRecognizer {
   const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
     token,
     region,
@@ -24,8 +24,6 @@ export function createSpeechRecognizer(
   recognizer.recognized = (_, event) => {
     if (event.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
       const text = event.result.text;
-
-      console.log("RECOGNIZED EVENT", text);
 
       if (text && text.trim().length > 0) {
         handlers.onRecognized(text);
