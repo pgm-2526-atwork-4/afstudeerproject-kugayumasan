@@ -26,6 +26,7 @@ async function postForm<T>(
   form: Record<string, string>,
 ): Promise<T> {
   const body = new URLSearchParams(form).toString();
+  console.log("KEYCLOAK TOKEN URL:", url);
 
   const resp = await fetch(url, {
     method: "POST",
@@ -43,6 +44,9 @@ async function postForm<T>(
 
 export const authService = {
   async login(username: string, password: string): Promise<AuthTokens> {
+    // 🔥 BELANGRIJK → eerst oude tokens weg
+    await clearTokens();
+
     const res = await postForm<KeycloakTokenResponse>(KEYCLOAK.tokenUrl, {
       grant_type: "password",
       client_id: KEYCLOAK.clientId,
