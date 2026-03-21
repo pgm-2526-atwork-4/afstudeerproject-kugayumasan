@@ -24,3 +24,11 @@ export interface Consultation {
   consultation_notes: string | null;
   transcripts: Transcript[];
 }
+export interface TranscriptResponse {
+  id: string;
+}
+
+export interface SpeechTokenResponse {
+  token: string;
+  region: string;
+}
