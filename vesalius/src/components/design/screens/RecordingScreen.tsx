@@ -15,6 +15,7 @@ type Props = {
   onStartRecording: () => void;
   onStopRecording: () => void;
   onBack: () => void;
+  liveText?: string;
 };
 
 export default function RecordingScreen({
@@ -24,6 +25,7 @@ export default function RecordingScreen({
   onStartRecording,
   onStopRecording,
   onBack,
+  liveText,
 }: Props) {
   const [waveformBars, setWaveformBars] = useState<number[]>(
     Array.from({ length: 30 }, () => Math.random()),
@@ -158,6 +160,12 @@ export default function RecordingScreen({
           </View>
         )}
       </View>
+
+      {isRecording && liveText ? (
+        <View style={{ marginTop: 20, paddingHorizontal: 16 }}>
+          <Text style={{ color: COLORS.text, fontSize: 14 }}>{liveText}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.record__footer}>
         {!isRecording ? (
