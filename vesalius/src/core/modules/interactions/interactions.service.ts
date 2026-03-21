@@ -63,3 +63,7 @@ export const interactionsService = {
     return res.data ?? [];
   },
 };
+
+export async function deleteInteraction(interactionId: string) {
+  return http.delete(`/conversations/${interactionId}`);
+}
