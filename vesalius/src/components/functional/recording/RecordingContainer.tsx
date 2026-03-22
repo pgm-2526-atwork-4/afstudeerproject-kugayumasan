@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import { router } from "expo-router";
 import { Audio } from "expo-av";
-import Voice from "@react-native-voice/voice";
+import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 import RecordingScreen from "@design/screens/RecordingScreen";
 
@@ -34,13 +34,12 @@ export default function RecordingContainer({
   -------------------------- */
 
   useEffect(() => {
-    Voice.onSpeechResults = async (event: any) => {
-      const text = event.value?.[0];
+    const onResult = async (event: any) => {
+      const text = event?.results?.[0]?.transcript;
 
       if (!text || !transcriptRef.current) return;
 
       console.log("LIVE TEXT:", text);
-
       setLiveText(text);
 
       try {
@@ -54,12 +53,17 @@ export default function RecordingContainer({
       }
     };
 
-    Voice.onSpeechError = (e: any) => {
-      console.error("Speech error", e);
+    const onError = (event: any) => {
+      console.error("Speech error:", event);
     };
 
+    // Register listeners
+    (ExpoSpeechRecognitionModule as any).addListener("result", onResult);
+    (ExpoSpeechRecognitionModule as any).addListener("error", onError);
+
     return () => {
-      Voice.destroy().then(Voice.removeAllListeners);
+      (ExpoSpeechRecognitionModule as any).removeAllListeners("result");
+      (ExpoSpeechRecognitionModule as any).removeAllListeners("error");
     };
   }, []);
 
@@ -70,7 +74,6 @@ export default function RecordingContainer({
   async function handleStartRecording() {
     try {
       const permission = await Audio.requestPermissionsAsync();
-
       if (!permission.granted) return;
 
       await Audio.setAudioModeAsync({
@@ -78,27 +81,31 @@ export default function RecordingContainer({
         playsInSilentModeIOS: true,
       });
 
+      // Start audio recording
       const recording = new Audio.Recording();
-
       await recording.prepareToRecordAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
       );
-
       await recording.startAsync();
-
       recordingRef.current = recording;
 
+      // Timer
       timerRef.current = setInterval(() => {
         setElapsed((t) => t + 1);
       }, 1000);
 
       setIsRecording(true);
 
+      // Create transcript session
       const transcript = await createTranscript(conversationId);
       transcriptRef.current = transcript;
 
-      /* 🔥 START SPEECH */
-      await Voice.start("nl-BE");
+      // Start speech recognition
+      ExpoSpeechRecognitionModule.start({
+        lang: "nl-BE",
+        continuous: true,
+        interimResults: true,
+      });
     } catch (err) {
       console.error("Start recording failed", err);
     }
@@ -114,16 +121,16 @@ export default function RecordingContainer({
 
       if (timerRef.current) clearInterval(timerRef.current);
 
+      // Stop audio recording
       await recordingRef.current.stopAndUnloadAsync();
-
       recordingRef.current = null;
 
       setIsRecording(false);
 
-      /* 🔥 STOP SPEECH */
-      await Voice.stop();
+      // Stop speech recognition
+      ExpoSpeechRecognitionModule.stop();
 
-      /* FINALIZE */
+      // Finalize transcript
       await finalizeTranscript(conversationId, transcriptRef.current.id);
 
       console.log("Recording complete");
