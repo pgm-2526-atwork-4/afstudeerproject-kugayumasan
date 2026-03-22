@@ -10,6 +10,8 @@ import { conversationService } from "@core/modules/interactions/conversations.se
 
 import type { Patient } from "@core/modules/patients/patients.types";
 
+const ANONYMOUS_PATIENT_ID = "5e0fdaf0-4b58-4bb5-9e69-f934090856d4";
+
 export default function CreateInteractionContainer() {
   const { selectedInstitutionId, doctorId } = useSession();
 
@@ -19,6 +21,7 @@ export default function CreateInteractionContainer() {
   const params = useLocalSearchParams<{
     selectedPatientId?: string;
     selectedPatientName?: string;
+    conversationId?: string;
   }>();
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -50,11 +53,7 @@ export default function CreateInteractionContainer() {
       }
 
       debounceRef.current = setTimeout(() => {
-        if (!selectedInstitutionId) {
-          console.log("No selectedInstitutionId");
-          return;
-        }
-
+        if (!selectedInstitutionId) return;
         searchPatients(selectedInstitutionId, trimmed);
       }, 350);
     },
@@ -62,30 +61,34 @@ export default function CreateInteractionContainer() {
   );
 
   const handleStartRecording = useCallback(
-    async (patient: Patient | null) => {
+    async (patient: Patient | null, isAnonymous: boolean) => {
       try {
-        if (!selectedInstitutionId || !doctorId) {
-          console.log("Missing institutionId or doctorId");
-          return;
+        if (!selectedInstitutionId || !doctorId) return;
+
+        let conversationId = params.conversationId;
+
+        // ALS GEEN BESTAANDE → maak nieuwe
+        if (!conversationId) {
+          const patientId = isAnonymous ? ANONYMOUS_PATIENT_ID : patient?.id;
+
+          if (!patientId) return;
+
+          const conversation = await conversationService.create({
+            patient_id: patientId,
+            institution_id: selectedInstitutionId,
+            doctor_id: doctorId,
+          });
+
+          conversationId = conversation.id;
         }
 
-        if (!patient?.id) {
-          console.log("Patient must be selected");
-          return;
-        }
-
-        const conversation = await conversationService.create({
-          patient_id: patient.id,
-          institution_id: selectedInstitutionId,
-          doctor_id: doctorId,
-        });
-
-        router.push(`/(app)/interactions/record/${conversation.id}`);
+        // naar recording met juiste conversation
+        router.push(`/(app)/interactions/record/${conversationId}`);
       } catch (error) {
-        console.error("Failed creating conversation", error);
+        console.error("Failed starting recording", error);
       }
     },
-    [selectedInstitutionId, doctorId],
+    [selectedInstitutionId, doctorId, params.conversationId],
   );
 
   return (
