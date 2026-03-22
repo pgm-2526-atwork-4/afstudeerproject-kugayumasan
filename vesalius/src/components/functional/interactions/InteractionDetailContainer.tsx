@@ -25,7 +25,13 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     try {
       const conversation = await getConversation(interactionId);
 
-      const transcript = conversation.transcripts?.[0]?.transcript_text ?? "";
+      // combine all transcripts
+      const transcript =
+        conversation.transcripts?.length > 0
+          ? conversation.transcripts
+              .map((t, i) => `Opname ${i + 1}\n${t.transcript_text ?? ""}`)
+              .join("\n\n---\n\n")
+          : "";
 
       const summary =
         conversation.consultation_notes ??
@@ -61,6 +67,11 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     loadInteraction();
   }, [interactionId]);
 
+  // direct naar recording screen (zelfde conversation)
+  const handleAddNotes = (id: string) => {
+    router.push(`/(app)/interactions/record/${id}`);
+  };
+
   if (!interaction) {
     return (
       <InteractionDetailScreen
@@ -75,7 +86,7 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
           transcript: "",
         }}
         onBack={() => router.back()}
-        onAddNotes={(id) => router.push(`/(app)/interactions/record/${id}`)}
+        onAddNotes={handleAddNotes}
       />
     );
   }
@@ -84,7 +95,7 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     <InteractionDetailScreen
       interaction={interaction}
       onBack={() => router.back()}
-      onAddNotes={(id) => router.push(`/(app)/interactions/record/${id}`)}
+      onAddNotes={handleAddNotes}
     />
   );
 }
