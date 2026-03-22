@@ -29,6 +29,10 @@ export interface Conversation {
   consultation_notes: string | null;
   transcripts: Transcript[];
   summary?: any;
+  patient?: {
+    first_name?: string | null;
+    last_name?: string | null;
+  };
   status?: string;
 }
 
@@ -48,7 +52,6 @@ export async function getTranscripts(
 
 /* -------------------- REALTIME FLOW -------------------- */
 
-
 export async function createTranscript(
   conversationId: string,
 ): Promise<TranscriptSession> {
@@ -56,7 +59,6 @@ export async function createTranscript(
     `/conversations/${conversationId}/transcripts/realtime/create`,
   );
 }
-
 
 export async function sendTranscriptChunk(
   conversationId: string,
@@ -70,7 +72,6 @@ export async function sendTranscriptChunk(
     },
   );
 }
-
 
 export async function finalizeTranscript(
   conversationId: string,

@@ -10,47 +10,70 @@ import {
   finalizeTranscript,
   sendTranscriptChunk,
   TranscriptSession,
+  getConversation,
 } from "@core/modules/recording/recording.service";
+
+import { deleteInteraction } from "@core/modules/interactions/interactions.service"; // ✅ ADD
+
+import { getPatientName } from "@functional/patients/patient.helpers";
 
 type Props = {
   conversationId: string;
-  patientName: string;
+  patient?: any;
 };
 
-export default function RecordingContainer({
-  conversationId,
-  patientName,
-}: Props) {
+export default function RecordingContainer({ conversationId, patient }: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [liveText, setLiveText] = useState("");
+  const [patientName, setPatientName] = useState("Anoniem");
 
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<TranscriptSession | null>(null);
   const lastChunkRef = useRef<string>("");
 
-  /* --------------------------
-     SPEECH EVENTS
-  -------------------------- */
+  /* -------------------------- */
+  /* LOAD PATIENT */
+  /* -------------------------- */
+
+  useEffect(() => {
+    async function loadPatient() {
+      try {
+        if (patient) {
+          setPatientName(getPatientName(patient));
+          return;
+        }
+
+        const convo = await getConversation(conversationId);
+
+        if (convo.patient) {
+          setPatientName(getPatientName(convo.patient as any));
+        }
+      } catch {
+        setPatientName("Anoniem");
+      }
+    }
+
+    loadPatient();
+  }, [conversationId, patient]);
+
+  /* -------------------------- */
+  /* SPEECH EVENTS */
+  /* -------------------------- */
 
   useEffect(() => {
     const onResult = async (event: any) => {
-      // ROBUST pars
       const text =
         event?.results?.[0]?.transcript ||
         event?.value?.[0] ||
         event?.transcript;
 
-      if (__DEV__) console.log("TEXT:", text);
-
       if (!text || !transcriptRef.current) return;
 
-      // skip duplicates
       if (text === lastChunkRef.current) return;
       lastChunkRef.current = text;
 
-      // append live text
       setLiveText((prev) =>
         prev.endsWith(text) ? prev : prev ? prev + " " + text : text,
       );
@@ -64,22 +87,16 @@ export default function RecordingContainer({
       } catch {}
     };
 
-    const onError = (event: any) => {
-      if (__DEV__) console.log("Speech error:", event);
-    };
-
     (ExpoSpeechRecognitionModule as any).addListener("result", onResult);
-    (ExpoSpeechRecognitionModule as any).addListener("error", onError);
 
     return () => {
       (ExpoSpeechRecognitionModule as any).removeAllListeners("result");
-      (ExpoSpeechRecognitionModule as any).removeAllListeners("error");
     };
   }, []);
 
-  /* --------------------------
-     START
-  -------------------------- */
+  /* -------------------------- */
+  /* START */
+  /* -------------------------- */
 
   async function handleStartRecording() {
     try {
@@ -120,9 +137,9 @@ export default function RecordingContainer({
     } catch {}
   }
 
-  /* --------------------------
-     STOP
-  -------------------------- */
+  /* -------------------------- */
+  /* STOP */
+  /* -------------------------- */
 
   async function handleStopRecording() {
     try {
@@ -146,6 +163,20 @@ export default function RecordingContainer({
     } catch {}
   }
 
+  /* -------------------------- */
+  /* CANCEL (NEW) */
+  /* -------------------------- */
+
+  async function handleCancel() {
+    try {
+      if (!isRecording) {
+        await deleteInteraction(conversationId); // dELETE EMPTY CONVo
+      }
+    } catch {}
+
+    router.back();
+  }
+
   return (
     <RecordingScreen
       patientName={patientName}
@@ -154,7 +185,7 @@ export default function RecordingContainer({
       liveText={liveText}
       onStartRecording={handleStartRecording}
       onStopRecording={handleStopRecording}
-      onBack={() => router.back()}
+      onBack={handleCancel} // ✅ USE CANCEL
     />
   );
 }

@@ -9,6 +9,6 @@ export default function InteractionRecording() {
   if (!interactionId) return null;
 
   return (
-    <RecordingContainer conversationId={interactionId} patientName="Patient" />
+    <RecordingContainer conversationId={interactionId}/>
   );
 }

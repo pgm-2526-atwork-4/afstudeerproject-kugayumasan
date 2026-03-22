@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import InteractionDetailScreen from "@design/screens/InteractionDetailScreen";
 
 import { getConversation } from "@core/modules/recording/recording.service";
+import { getPatientName } from "@functional/patients/patient.helpers";
 
 import type { InteractionCardModel } from "@design/interactions/InteractionCard";
 
@@ -25,7 +26,6 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     try {
       const conversation = await getConversation(interactionId);
 
-      // combine all transcripts
       const transcript =
         conversation.transcripts?.length > 0
           ? conversation.transcripts
@@ -39,7 +39,9 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
 
       setInteraction({
         id: interactionId,
-        patientName: "Patiënt",
+        patientName: conversation.patient
+          ? getPatientName(conversation.patient as any)
+          : "Anoniem",
         providerName: "Arts",
         status: summary ? "Voltooid" : "Verwerking",
         date: "Vandaag",
@@ -48,11 +50,9 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
         transcript,
       });
     } catch (error) {
-      console.error("Failed loading interaction", error);
-
       setInteraction({
         id: interactionId,
-        patientName: "Patiënt",
+        patientName: "Anoniem",
         providerName: "Arts",
         status: "Fout",
         date: "Vandaag",
@@ -67,7 +67,6 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     loadInteraction();
   }, [interactionId]);
 
-  // direct naar recording screen (zelfde conversation)
   const handleAddNotes = (id: string) => {
     router.push(`/(app)/interactions/record/${id}`);
   };
@@ -77,7 +76,7 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
       <InteractionDetailScreen
         interaction={{
           id: interactionId,
-          patientName: "Patiënt",
+          patientName: "Anoniem",
           providerName: "Arts",
           status: "Verwerking",
           date: "Vandaag",
