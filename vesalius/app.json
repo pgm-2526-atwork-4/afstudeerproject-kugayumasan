@@ -31,14 +31,7 @@
       "expo-router",
       "expo-secure-store",
       "expo-speech-recognition",
-      "expo-localization",
-      [
-        "react-native-voicekit",
-        {
-          "speechRecognitionPermission": "We gebruiken spraakherkenning",
-          "microphonePermission": "We gebruiken je microfoon"
-        }
-      ]
+      "expo-localization"
     ],
     "extra": {
       "router": {},
