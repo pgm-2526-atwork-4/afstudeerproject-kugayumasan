@@ -28,6 +28,7 @@ export default function RecordingContainer({
   const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<TranscriptSession | null>(null);
+  const lastChunkRef = useRef<string>("");
 
   /* --------------------------
      SPEECH EVENTS
@@ -35,12 +36,24 @@ export default function RecordingContainer({
 
   useEffect(() => {
     const onResult = async (event: any) => {
-      const text = event?.results?.[0]?.transcript;
+      // ROBUST pars
+      const text =
+        event?.results?.[0]?.transcript ||
+        event?.value?.[0] ||
+        event?.transcript;
+
+      if (__DEV__) console.log("TEXT:", text);
 
       if (!text || !transcriptRef.current) return;
 
-      console.log("LIVE TEXT:", text);
-      setLiveText(text);
+      // skip duplicates
+      if (text === lastChunkRef.current) return;
+      lastChunkRef.current = text;
+
+      // append live text
+      setLiveText((prev) =>
+        prev.endsWith(text) ? prev : prev ? prev + " " + text : text,
+      );
 
       try {
         await sendTranscriptChunk(
@@ -48,16 +61,13 @@ export default function RecordingContainer({
           transcriptRef.current.id,
           text,
         );
-      } catch (e) {
-        console.error("Chunk send failed", e);
-      }
+      } catch {}
     };
 
     const onError = (event: any) => {
-      console.error("Speech error:", event);
+      if (__DEV__) console.log("Speech error:", event);
     };
 
-    // Register listeners
     (ExpoSpeechRecognitionModule as any).addListener("result", onResult);
     (ExpoSpeechRecognitionModule as any).addListener("error", onError);
 
@@ -73,6 +83,10 @@ export default function RecordingContainer({
 
   async function handleStartRecording() {
     try {
+      setLiveText("");
+      setElapsed(0);
+      lastChunkRef.current = "";
+
       const permission = await Audio.requestPermissionsAsync();
       if (!permission.granted) return;
 
@@ -81,34 +95,29 @@ export default function RecordingContainer({
         playsInSilentModeIOS: true,
       });
 
-      // Start audio recording
       const recording = new Audio.Recording();
       await recording.prepareToRecordAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY,
       );
       await recording.startAsync();
+
       recordingRef.current = recording;
 
-      // Timer
       timerRef.current = setInterval(() => {
         setElapsed((t) => t + 1);
       }, 1000);
 
       setIsRecording(true);
 
-      // Create transcript session
       const transcript = await createTranscript(conversationId);
       transcriptRef.current = transcript;
 
-      // Start speech recognition
       ExpoSpeechRecognitionModule.start({
         lang: "nl-BE",
         continuous: true,
         interimResults: true,
       });
-    } catch (err) {
-      console.error("Start recording failed", err);
-    }
+    } catch {}
   }
 
   /* --------------------------
@@ -121,27 +130,20 @@ export default function RecordingContainer({
 
       if (timerRef.current) clearInterval(timerRef.current);
 
-      // Stop audio recording
       await recordingRef.current.stopAndUnloadAsync();
       recordingRef.current = null;
 
       setIsRecording(false);
 
-      // Stop speech recognition
       ExpoSpeechRecognitionModule.stop();
 
-      // Finalize transcript
       await finalizeTranscript(conversationId, transcriptRef.current.id);
-
-      console.log("Recording complete");
 
       router.replace({
         pathname: `/(app)/interactions/feedback/${conversationId}`,
         params: { status: "success" },
       });
-    } catch (err) {
-      console.error("Stop recording failed", err);
-    }
+    } catch {}
   }
 
   return (
