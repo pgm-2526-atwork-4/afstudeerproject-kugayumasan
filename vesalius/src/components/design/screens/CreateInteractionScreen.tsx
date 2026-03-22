@@ -158,7 +158,10 @@ export default function CreateInteractionScreen({
 
           <Button
             variant="outline"
-            onPress={() => onStartRecording(null, true)}
+            onPress={() => {
+              setSelectedPatient(null);
+              onStartRecording(null, true);
+            }}
             style={{ width: "100%" }}
           >
             <Text style={styles.btnRowText}>{t("interaction.anonymous")}</Text>
