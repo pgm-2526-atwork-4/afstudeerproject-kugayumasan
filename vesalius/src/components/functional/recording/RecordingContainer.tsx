@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
 import { router } from "expo-router";
-import { Audio } from "expo-av";
 import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 import RecordingScreen from "@design/screens/RecordingScreen";
@@ -13,7 +12,7 @@ import {
   getConversation,
 } from "@core/modules/recording/recording.service";
 
-import { deleteInteraction } from "@core/modules/interactions/interactions.service"; // ✅ ADD
+import { deleteInteraction } from "@core/modules/interactions/interactions.service";
 
 import { getPatientName } from "@functional/patients/patient.helpers";
 
@@ -25,13 +24,15 @@ type Props = {
 export default function RecordingContainer({ conversationId, patient }: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
-  const [liveText, setLiveText] = useState("");
+
+  // ✅ FIX: split final + interim text
+  const [finalText, setFinalText] = useState("");
+  const [interimText, setInterimText] = useState("");
+
   const [patientName, setPatientName] = useState("Anoniem");
 
-  const recordingRef = useRef<Audio.Recording | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<TranscriptSession | null>(null);
-  const lastChunkRef = useRef<string>("");
 
   /* -------------------------- */
   /* LOAD PATIENT */
@@ -59,32 +60,37 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   }, [conversationId, patient]);
 
   /* -------------------------- */
-  /* SPEECH EVENTS */
+  /* SPEECH EVENTS (FIXED) */
   /* -------------------------- */
 
   useEffect(() => {
     const onResult = async (event: any) => {
-      const text =
-        event?.results?.[0]?.transcript ||
-        event?.value?.[0] ||
-        event?.transcript;
+      const result = event?.results?.[0];
 
-      if (!text || !transcriptRef.current) return;
+      if (!result || !transcriptRef.current) return;
 
-      if (text === lastChunkRef.current) return;
-      lastChunkRef.current = text;
+      const text = result?.transcript || event?.value?.[0] || event?.transcript;
 
-      setLiveText((prev) =>
-        prev.endsWith(text) ? prev : prev ? prev + " " + text : text,
-      );
+      const isFinal = result?.isFinal || event?.isFinal || false;
 
-      try {
-        await sendTranscriptChunk(
-          conversationId,
-          transcriptRef.current.id,
-          text,
-        );
-      } catch {}
+      if (!text || text.trim().length === 0) return;
+
+      if (isFinal) {
+        // ✅ FINAL TEXT → append once
+        setFinalText((prev) => (prev ? prev + " " + text : text));
+        setInterimText("");
+
+        try {
+          await sendTranscriptChunk(
+            conversationId,
+            transcriptRef.current.id,
+            text,
+          );
+        } catch {}
+      } else {
+        // 🟡 INTERIM TEXT → live preview
+        setInterimText(text);
+      }
     };
 
     (ExpoSpeechRecognitionModule as any).addListener("result", onResult);
@@ -100,25 +106,10 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   async function handleStartRecording() {
     try {
-      setLiveText("");
+      // ✅ RESET TEXT
+      setFinalText("");
+      setInterimText("");
       setElapsed(0);
-      lastChunkRef.current = "";
-
-      const permission = await Audio.requestPermissionsAsync();
-      if (!permission.granted) return;
-
-      await Audio.setAudioModeAsync({
-        allowsRecordingIOS: true,
-        playsInSilentModeIOS: true,
-      });
-
-      const recording = new Audio.Recording();
-      await recording.prepareToRecordAsync(
-        Audio.RecordingOptionsPresets.HIGH_QUALITY,
-      );
-      await recording.startAsync();
-
-      recordingRef.current = recording;
 
       timerRef.current = setInterval(() => {
         setElapsed((t) => t + 1);
@@ -130,7 +121,7 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       transcriptRef.current = transcript;
 
       ExpoSpeechRecognitionModule.start({
-        lang: "nl-BE",
+        lang: "nl-NL", // ✅ better accuracy
         continuous: true,
         interimResults: true,
       });
@@ -143,12 +134,9 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   async function handleStopRecording() {
     try {
-      if (!recordingRef.current || !transcriptRef.current) return;
+      if (!transcriptRef.current) return;
 
       if (timerRef.current) clearInterval(timerRef.current);
-
-      await recordingRef.current.stopAndUnloadAsync();
-      recordingRef.current = null;
 
       setIsRecording(false);
 
@@ -164,28 +152,33 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   }
 
   /* -------------------------- */
-  /* CANCEL (NEW) */
+  /* CANCEL */
   /* -------------------------- */
 
   async function handleCancel() {
     try {
       if (!isRecording) {
-        await deleteInteraction(conversationId); // dELETE EMPTY CONVo
+        await deleteInteraction(conversationId);
       }
     } catch {}
 
     router.back();
   }
 
+  /* -------------------------- */
+  /* RENDER */
+  /* -------------------------- */
+
   return (
     <RecordingScreen
       patientName={patientName}
       isRecording={isRecording}
       elapsed={elapsed}
-      liveText={liveText}
+      // ✅ combine final + interim text
+      liveText={`${finalText} ${interimText}`}
       onStartRecording={handleStartRecording}
       onStopRecording={handleStopRecording}
-      onBack={handleCancel} // ✅ USE CANCEL
+      onBack={handleCancel}
     />
   );
 }
