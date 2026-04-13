@@ -25,7 +25,6 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   const [isRecording, setIsRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
 
-  // ✅ FIX: split final + interim text
   const [finalText, setFinalText] = useState("");
   const [interimText, setInterimText] = useState("");
 
@@ -60,23 +59,40 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   }, [conversationId, patient]);
 
   /* -------------------------- */
-  /* SPEECH EVENTS (FIXED) */
+  /* SPEECH EVENTS (FINAL FIX) */
   /* -------------------------- */
 
   useEffect(() => {
     const onResult = async (event: any) => {
-      const result = event?.results?.[0];
+      console.log("🎤 EVENT:", JSON.stringify(event));
 
-      if (!result || !transcriptRef.current) return;
+      let text = "";
+      let isFinal = false;
 
-      const text = result?.transcript || event?.value?.[0] || event?.transcript;
+      // ✅ ANDROID (meest voorkomend)
+      if (event?.value && Array.isArray(event.value)) {
+        text = event.value[0];
+        isFinal = true;
+      }
 
-      const isFinal = result?.isFinal || event?.isFinal || false;
+      // ✅ iOS style
+      else if (event?.results?.[0]) {
+        const result = event.results[0];
+        text = result?.transcript || "";
+        isFinal = result?.isFinal ?? false;
+      }
 
-      if (!text || text.trim().length === 0) return;
+      // ✅ fallback
+      else if (event?.transcript) {
+        text = event.transcript;
+        isFinal = true;
+      }
+
+      console.log("📝 TEXT:", text, "FINAL:", isFinal);
+
+      if (!text || text.trim().length === 0 || !transcriptRef.current) return;
 
       if (isFinal) {
-        // ✅ FINAL TEXT → append once
         setFinalText((prev) => (prev ? prev + " " + text : text));
         setInterimText("");
 
@@ -86,9 +102,10 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
             transcriptRef.current.id,
             text,
           );
-        } catch {}
+        } catch (e) {
+          console.log("❌ sendTranscriptChunk error:", e);
+        }
       } else {
-        // 🟡 INTERIM TEXT → live preview
         setInterimText(text);
       }
     };
@@ -106,7 +123,6 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   async function handleStartRecording() {
     try {
-      // ✅ RESET TEXT
       setFinalText("");
       setInterimText("");
       setElapsed(0);
@@ -121,11 +137,13 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       transcriptRef.current = transcript;
 
       ExpoSpeechRecognitionModule.start({
-        lang: "nl-NL", // ✅ better accuracy
+        lang: "nl-NL",
         continuous: true,
         interimResults: true,
       });
-    } catch {}
+    } catch (e) {
+      console.log("❌ start error:", e);
+    }
   }
 
   /* -------------------------- */
@@ -148,7 +166,9 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
         pathname: `/(app)/interactions/feedback/${conversationId}`,
         params: { status: "success" },
       });
-    } catch {}
+    } catch (e) {
+      console.log("❌ stop error:", e);
+    }
   }
 
   /* -------------------------- */
@@ -160,7 +180,9 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       if (!isRecording) {
         await deleteInteraction(conversationId);
       }
-    } catch {}
+    } catch (e) {
+      console.log("❌ cancel error:", e);
+    }
 
     router.back();
   }
@@ -174,7 +196,6 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       patientName={patientName}
       isRecording={isRecording}
       elapsed={elapsed}
-      // ✅ combine final + interim text
       liveText={`${finalText} ${interimText}`}
       onStartRecording={handleStartRecording}
       onStopRecording={handleStopRecording}
