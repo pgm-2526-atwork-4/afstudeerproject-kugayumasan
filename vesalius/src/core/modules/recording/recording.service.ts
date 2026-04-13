@@ -82,49 +82,4 @@ export async function finalizeTranscript(
   );
 }
 
-/* -------------------- SPEECH TOKEN -------------------- */
 
-export async function getSpeechToken(): Promise<SpeechTokenResponse> {
-  return http.get("/azure/speech-token");
-}
-
-/* -------------------- AUDIO UPLOAD -------------------- */
-
-export async function uploadAudio(
-  conversationId: string,
-  transcriptId: string,
-  fileUri: string,
-) {
-  const formData = new FormData();
-
-  formData.append("audio_recording", {
-    uri: fileUri,
-    name: "recording.wav",
-    type: "audio/wav",
-  } as any);
-
-  const tokens = await authService.getTokens();
-
-  const url = `${process.env.EXPO_PUBLIC_API_URL}/conversations/${conversationId}/transcripts/${transcriptId}/realtime/audio`;
-
-  console.log("UPLOAD URL:", url);
-
-  const res = await fetch(url, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${tokens?.accessToken}`,
-    },
-    body: formData,
-  });
-
-  const text = await res.text();
-
-  console.log("UPLOAD STATUS:", res.status);
-  console.log("UPLOAD BODY:", text);
-
-  if (!res.ok) {
-    throw new Error(`Upload failed: ${res.status} ${text}`);
-  }
-
-  return text;
-}
