@@ -6,6 +6,9 @@ import InteractionDetailScreen from "@design/screens/InteractionDetailScreen";
 import { getConversation } from "@core/modules/recording/recording.service";
 import { getPatientName } from "@functional/patients/patient.helpers";
 
+import { subscribeToConversation } from "@core/modules/recording/realtime.service";
+import { authService } from "@core/modules/auth/auth.service"; 
+
 import type { InteractionCardModel } from "@design/interactions/InteractionCard";
 
 type DetailInteraction = InteractionCardModel & {
@@ -21,6 +24,10 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
   const [interaction, setInteraction] = useState<DetailInteraction | null>(
     null,
   );
+
+  /* -------------------------- */
+  /* LOAD INTERACTION */
+  /* -------------------------- */
 
   async function loadInteraction() {
     try {
@@ -49,7 +56,7 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
         summary,
         transcript,
       });
-    } catch (error) {
+    } catch {
       setInteraction({
         id: interactionId,
         patientName: "Anoniem",
@@ -63,13 +70,58 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     }
   }
 
+  /* -------------------------- */
+  /* INITIAL LOAD */
+  /* -------------------------- */
+
   useEffect(() => {
     loadInteraction();
   }, [interactionId]);
 
+  /* -------------------------- */
+  /* PUSHER SUBSCRIPTION */
+  /* -------------------------- */
+
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
+
+    async function setupPusher() {
+      try {
+        const tokens = await authService.getTokens();
+        const token = tokens?.accessToken;
+
+        if (!token) {
+          console.log("❌ No token for Pusher");
+          return;
+        }
+
+        unsubscribe = subscribeToConversation(interactionId, token, () => {
+          console.log("✅ SUMMARY READY → refreshing");
+          loadInteraction(); // 🔥 REFRESH
+        });
+      } catch (e) {
+        console.log("Pusher setup failed", e);
+      }
+    }
+
+    setupPusher();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [interactionId]);
+
+  /* -------------------------- */
+  /* ACTIONS */
+  /* -------------------------- */
+
   const handleAddNotes = (id: string) => {
     router.push(`/(app)/interactions/record/${id}`);
   };
+
+  /* -------------------------- */
+  /* RENDER */
+  /* -------------------------- */
 
   if (!interaction) {
     return (
