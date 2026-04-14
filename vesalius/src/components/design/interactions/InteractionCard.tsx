@@ -4,6 +4,7 @@ import { COLORS } from "@style/colors";
 import { SPACING } from "@style/spacing";
 import { getStatusColors } from "@functional/interactions/interaction.helpers";
 import Pill from "@design/ui/Pill";
+import { useTranslation } from "react-i18next";
 
 export type InteractionStatus =
   | "Voltooid"
@@ -31,6 +32,7 @@ export default function InteractionCard({
   onPress,
   onDelete,
 }: Props) {
+  const { t } = useTranslation();
   const c = getStatusColors(interaction.status);
 
   return (
@@ -49,7 +51,7 @@ export default function InteractionCard({
 
         <View style={styles.rightSide}>
           <Pill
-            label={interaction.status}
+            label={t(`interaction.status.${interaction.status}`)}
             backgroundColor={c.bg}
             textColor={c.text}
           />
@@ -62,7 +64,7 @@ export default function InteractionCard({
               }}
               style={styles.deleteButton}
             >
-              <Text style={styles.deleteText}>Verwijder</Text>
+              <Text style={styles.deleteText}>{t("common.delete")}</Text>
             </Pressable>
           )}
         </View>

@@ -7,6 +7,7 @@ import { Button } from "@design/ui/button";
 import { CheckCircle2, XCircle } from "lucide-react-native";
 
 import { COLORS } from "@style/colors";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   status: "success" | "error";
@@ -21,6 +22,8 @@ export default function RecordingFeedbackScreen({
   onRetry,
   onGoToInteraction,
 }: Props) {
+  const { t } = useTranslation();
+
   useEffect(() => {
     if (status === "success" && onGoToInteraction) {
       const timer = setTimeout(() => onGoToInteraction(), 2000);
@@ -104,13 +107,15 @@ export default function RecordingFeedbackScreen({
 
         <View style={styles.recordFeedback__message}>
           <Text style={styles.recordFeedback__title}>
-            {isSuccess ? "Opname verzonden" : "Upload mislukt"}
+            {isSuccess
+              ? t("recording.successTitle")
+              : t("recording.errorTitle")}
           </Text>
 
           <Text style={styles.recordFeedback__subtitle}>
             {isSuccess
-              ? "Verwerking gestart."
-              : "Controleer je verbinding en probeer opnieuw."}
+              ? t("recording.successSubtitle")
+              : t("recording.errorSubtitle")}
           </Text>
         </View>
 
@@ -137,7 +142,7 @@ export default function RecordingFeedbackScreen({
             onPress={onRetry}
             style={styles.recordFeedback__primaryBtn}
             textStyle={styles.recordFeedback__primaryText}
-            title="Opnieuw proberen"
+            title={t("recording.retry")}
           />
 
           <Button
@@ -145,7 +150,7 @@ export default function RecordingFeedbackScreen({
             onPress={onGoBack}
             style={styles.recordFeedback__secondaryBtn}
             textStyle={styles.recordFeedback__secondaryText}
-            title="Terug naar overzicht"
+            title={t("recording.back")}
           />
         </View>
       )}

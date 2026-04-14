@@ -8,6 +8,7 @@ import { SPACING } from "@style/spacing";
 import { RADIUS } from "@style/radius";
 
 import type { Conversation } from "@core/modules/interactions/interactions.types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   upcoming?: Conversation | null;
@@ -15,15 +16,17 @@ type Props = {
 };
 
 export default function UpcomingInteractionCard({ upcoming, onOpen }: Props) {
+  const { t } = useTranslation();
+
   function getPatientName(item: Conversation) {
-    if (!item.patient) return "Anoniem";
+    if (!item.patient) return t("common.anonymous");
 
     const first = item.patient.first_name ?? "";
     const last = item.patient.last_name ?? "";
 
     const name = `${first} ${last}`.trim();
 
-    return name || "Anoniem";
+    return name || t("common.anonymous");
   }
 
   function formatDate(date?: string | null) {
@@ -34,8 +37,8 @@ export default function UpcomingInteractionCard({ upcoming, onOpen }: Props) {
   if (!upcoming) {
     return (
       <EmptyState
-        title="Geen aankomende afspraken"
-        description="Je hebt momenteel geen geplande interacties."
+        title={t("home.noUpcoming")}
+        description={t("home.noUpcomingDescription")}
       />
     );
   }
@@ -45,13 +48,12 @@ export default function UpcomingInteractionCard({ upcoming, onOpen }: Props) {
       <View style={styles.cardTopRow}>
         <View style={{ flex: 1 }}>
           <Text style={styles.cardTitle}>{getPatientName(upcoming)}</Text>
-
           <Text style={styles.cardMuted}>{formatDate(upcoming.due_date)}</Text>
         </View>
       </View>
 
       <Button
-        title="Open"
+        title={t("common.open")}
         variant="outline"
         onPress={() => onOpen(upcoming.id)}
         style={{ width: "100%" }}

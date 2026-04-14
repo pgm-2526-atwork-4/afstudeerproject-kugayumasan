@@ -53,71 +53,75 @@ export default function InteractionDetailScreen({
 
   return (
     <Screen>
-      <View style={styles.header}>
-        <Pressable
-          onPress={onBack}
-          style={({ pressed }) => [
-            styles.backBtn,
-            pressed ? styles.backBtn__pressed : null,
-          ]}
-        >
-          <ArrowLeft size={20} strokeWidth={1.5} color={COLORS.text} />
-          <Text style={styles.backText}>{t("interaction.back")}</Text>
-        </Pressable>
-
-        <View style={styles.headerMainRow}>
-          <View style={styles.headerMainLeft}>
-            <Text style={styles.headerTitle}>{interaction.patientName}</Text>
-            <Text style={styles.headerSub}>{interaction.dateLabel}</Text>
-          </View>
-
-          <View
-            style={[styles.statusPill, { backgroundColor: statusColors.bg }]}
+      <View style={{ flex: 1 }}>
+        <View style={styles.header}>
+          <Pressable
+            onPress={onBack}
+            style={({ pressed }) => [
+              styles.backBtn,
+              pressed ? styles.backBtn__pressed : null,
+            ]}
           >
-            <Text style={[styles.statusText, { color: statusColors.text }]}>
-              {interaction.status}
-            </Text>
+            <ArrowLeft size={20} strokeWidth={1.5} color={COLORS.text} />
+            <Text style={styles.backText}>{t("interaction.back")}</Text>
+          </Pressable>
+
+          <View style={styles.headerMainRow}>
+            <View style={styles.headerMainLeft}>
+              <Text style={styles.headerTitle}>{interaction.patientName}</Text>
+              <Text style={styles.headerSub}>{interaction.dateLabel}</Text>
+            </View>
+
+            <View
+              style={[styles.statusPill, { backgroundColor: statusColors.bg }]}
+            >
+              <Text style={[styles.statusText, { color: statusColors.text }]}>
+                {interaction.status}
+              </Text>
+            </View>
           </View>
         </View>
+
+        <ScrollView
+          contentContainerStyle={[styles.content, { paddingBottom: 120 }]}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.stack}>
+            <View>
+              <Text style={styles.sectionTitle}>
+                {t("interaction.summary")}
+              </Text>
+
+              <SummaryBlock
+                summary={interaction.summary}
+                isLoading={interaction.summary == null}
+                variant={interaction.summary ? "summary" : "loading"}
+              />
+
+              <Button
+                onPress={() => onAddNotes(interaction.id)}
+                style={styles.addBtn}
+                textStyle={styles.addBtnText}
+                title={t("interaction.addNotes")}
+                leftIcon={
+                  <Mic
+                    size={20}
+                    strokeWidth={1.5}
+                    color={COLORS.background.white}
+                  />
+                }
+              />
+            </View>
+
+            <TranscriptCollapse
+              title={t("interaction.transcript")}
+              transcript={interaction.transcript ?? null}
+              isLoading={interaction.transcript == null}
+              defaultCollapsed
+            />
+          </View>
+        </ScrollView>
       </View>
-
-      <ScrollView
-        contentContainerStyle={styles.content}
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.stack}>
-          <View>
-            <Text style={styles.sectionTitle}>{t("interaction.summary")}</Text>
-
-            <SummaryBlock
-              summary={interaction.summary}
-              isLoading={interaction.summary == null}
-              variant={interaction.summary ? "summary" : "loading"}
-            />
-
-            <Button
-              onPress={() => onAddNotes(interaction.id)}
-              style={styles.addBtn}
-              textStyle={styles.addBtnText}
-              title={t("interaction.addNotes")}
-              leftIcon={
-                <Mic
-                  size={20}
-                  strokeWidth={1.5}
-                  color={COLORS.background.white}
-                />
-              }
-            />
-          </View>
-
-          <TranscriptCollapse
-            title={t("interaction.transcript")}
-            transcript={interaction.transcript ?? null}
-            isLoading={interaction.transcript == null}
-            defaultCollapsed
-          />
-        </View>
-      </ScrollView>
     </Screen>
   );
 }

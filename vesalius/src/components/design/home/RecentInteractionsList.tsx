@@ -8,6 +8,7 @@ import { SPACING } from "@style/spacing";
 import { RADIUS } from "@style/radius";
 
 import type { Conversation } from "@core/modules/interactions/interactions.types";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   interactions: Conversation[];
@@ -18,15 +19,17 @@ export default function RecentInteractionsList({
   interactions,
   onOpen,
 }: Props) {
+  const { t } = useTranslation();
+
   function getPatientName(item: Conversation) {
-    if (!item.patient) return "Anoniem";
+    if (!item.patient) return t("common.anonymous");
 
     const first = item.patient.first_name ?? "";
     const last = item.patient.last_name ?? "";
 
     const name = `${first} ${last}`.trim();
 
-    return name || "Anoniem";
+    return name || t("common.anonymous");
   }
 
   function formatDate(date?: string | null) {
@@ -37,8 +40,8 @@ export default function RecentInteractionsList({
   if (!interactions.length) {
     return (
       <EmptyState
-        title="Geen recente interacties"
-        description="Interacties die je opent verschijnen hier."
+        title={t("home.noRecent")}
+        description={t("home.noRecentDescription")}
       />
     );
   }
@@ -56,7 +59,6 @@ export default function RecentInteractionsList({
         >
           <View>
             <Text style={styles.recentName}>{getPatientName(item)}</Text>
-
             <Text style={styles.recentTime}>{formatDate(item.created_at)}</Text>
           </View>
 

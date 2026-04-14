@@ -7,6 +7,7 @@ import { Button } from "@design/ui/button";
 import { Square, Mic } from "lucide-react-native";
 
 import { COLORS } from "@style/colors";
+import { useTranslation } from "react-i18next";
 
 type Props = {
   patientName: string;
@@ -27,6 +28,8 @@ export default function RecordingScreen({
   onBack,
   liveText,
 }: Props) {
+  const { t } = useTranslation();
+
   const [waveformBars, setWaveformBars] = useState<number[]>(
     Array.from({ length: 30 }, () => Math.random()),
   );
@@ -40,11 +43,10 @@ export default function RecordingScreen({
     const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
 
-    const hh = String(hours).padStart(2, "0");
-    const mm = String(mins).padStart(2, "0");
-    const ss = String(secs).padStart(2, "0");
-
-    return `${hh}:${mm}:${ss}`;
+    return `${String(hours).padStart(2, "0")}:${String(mins).padStart(
+      2,
+      "0",
+    )}:${String(secs).padStart(2, "0")}`;
   };
 
   useEffect(() => {
@@ -53,12 +55,10 @@ export default function RecordingScreen({
     const interval = setInterval(() => {
       setWaveformBars((prev) => {
         const next = [...prev];
-
         for (let i = 0; i < 5; i++) {
           const idx = Math.floor(Math.random() * next.length);
           next[idx] = Math.random();
         }
-
         return next;
       });
     }, 100);
@@ -98,7 +98,6 @@ export default function RecordingScreen({
       a1.stop();
       a2.stop();
       a3.stop();
-
       dot1.setValue(0.3);
       dot2.setValue(0.3);
       dot3.setValue(0.3);
@@ -110,7 +109,7 @@ export default function RecordingScreen({
   return (
     <Screen>
       <View style={styles.record__header}>
-        <Text style={styles.record__title}>Opname</Text>
+        <Text style={styles.record__title}>{t("recording.title")}</Text>
         <Text style={styles.record__subtitle}>{patientName}</Text>
       </View>
 
@@ -155,7 +154,7 @@ export default function RecordingScreen({
             </View>
 
             <Text style={styles.record__statusText}>
-              Streaming naar Vesalius.ai...
+              {t("recording.streaming")}
             </Text>
           </View>
         )}
@@ -175,14 +174,9 @@ export default function RecordingScreen({
               style={[styles.record__btn, styles["record__btn--start"]]}
             >
               <View style={styles.btnRow}>
-                <Mic
-                  size={20}
-                  strokeWidth={1.5}
-                  color={COLORS.background.white}
-                  style={styles.iconFix}
-                />
+                <Mic size={20} color={COLORS.background.white} />
                 <Text style={[styles.btnLabel, styles.btnLabelLight]}>
-                  Start opname
+                  {t("recording.start")}
                 </Text>
               </View>
             </Button>
@@ -191,7 +185,7 @@ export default function RecordingScreen({
               variant="outline"
               onPress={onBack}
               style={[styles.record__btn, styles["record__btn--secondary"]]}
-              title="Annuleren"
+              title={t("recording.cancel")}
               textStyle={styles.record__btnSecondaryText}
             />
           </>
@@ -202,14 +196,9 @@ export default function RecordingScreen({
             style={[styles.record__btn, styles["record__btn--stop"]]}
           >
             <View style={styles.btnRow}>
-              <Square
-                size={20}
-                strokeWidth={1.5}
-                color={COLORS.error}
-                style={styles.iconFix}
-              />
+              <Square size={20} color={COLORS.error} />
               <Text style={[styles.btnLabel, styles.btnLabelDanger]}>
-                Stop opname
+                {t("recording.stop")}
               </Text>
             </View>
           </Button>
