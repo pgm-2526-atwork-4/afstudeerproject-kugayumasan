@@ -1,9 +1,10 @@
 import { http } from "@core/network/http";
 
 export type CreateConversationInput = {
-  patient_id: string;
+  patient_id?: string;
   institution_id: string;
   doctor_id: string;
+  is_anonymous?: boolean;
 };
 
 export type Conversation = {
