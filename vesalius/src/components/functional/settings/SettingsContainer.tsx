@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { router } from "expo-router";
 import SettingsScreen from "@design/screens/SettingsScreen";
 import { useSession } from "@core/modules/session/session.context";
@@ -8,11 +8,20 @@ import { displayDoctorName } from "@core/utils/doctor.utils";
 type SelectKey = "language" | "org" | null;
 
 export default function SettingsContainer() {
-  const { logout, me } = useSession();
+  const { logout, me, selectedInstitutionId, setSession } = useSession();
 
   const [language, setLanguage] = useState(i18n.language || "nl");
-  const [organization, setOrganization] = useState("metro-hospital");
   const [openSelect, setOpenSelect] = useState<SelectKey>(null);
+
+  // 🔥 HAAL ORGANISATIES UIT /users/me
+  const organizationOptions = useMemo(() => {
+    return (
+      me?.institutions?.map((inst: any) => ({
+        label: inst.name,
+        value: inst.id,
+      })) ?? []
+    );
+  }, [me]);
 
   async function handleLogout() {
     await logout();
@@ -24,6 +33,12 @@ export default function SettingsContainer() {
     i18n.changeLanguage(lang);
   }
 
+  function handleChangeOrganization(orgId: string) {
+    setSession({
+      selectedInstitutionId: orgId,
+    });
+  }
+
   const profileName = displayDoctorName(me);
   const profileEmail = me?.email ?? "—";
 
@@ -33,11 +48,13 @@ export default function SettingsContainer() {
       profileName={profileName}
       profileEmail={profileEmail}
       language={language}
-      organization={organization}
+      organization={selectedInstitutionId ?? ""}
       openSelect={openSelect}
       setOpenSelect={setOpenSelect}
       onChangeLanguage={handleChangeLanguage}
-      onChangeOrganization={setOrganization}
+      onChangeOrganization={handleChangeOrganization}
+      // 🔥 NIEUW
+      organizationOptions={organizationOptions}
     />
   );
 }

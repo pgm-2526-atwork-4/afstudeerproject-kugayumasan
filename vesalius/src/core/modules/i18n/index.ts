@@ -16,6 +16,21 @@ const resources = {
         selectOrganization: "Selecteer organisatie",
       },
 
+      recording: {
+        title: "Opname",
+        start: "Start opname",
+        stop: "Stop opname",
+        cancel: "Annuleren",
+        streaming: "Streaming naar Vesalius.ai...",
+
+        successTitle: "Opname verzonden",
+        successSubtitle: "Verwerking gestart.",
+        errorTitle: "Upload mislukt",
+        errorSubtitle: "Controleer je verbinding en probeer opnieuw.",
+        retry: "Opnieuw proberen",
+        back: "Terug naar overzicht",
+      },
+
       home: {
         title: "Home",
         quickActions: "SNELLE ACTIES",
@@ -23,6 +38,12 @@ const resources = {
         searchInteraction: "Zoek interactie",
         upcoming: "AANKOMENDE AFSPRAAK",
         recent: "RECENT BEKEKEN",
+
+        // ✅ TOEGEVOEGD
+        noRecent: "Geen recente interacties",
+        noRecentDescription: "Interacties die je opent verschijnen hier.",
+        noUpcoming: "Geen aankomende afspraken",
+        noUpcomingDescription: "Je hebt momenteel geen geplande interacties.",
       },
 
       patient: {
@@ -81,13 +102,14 @@ const resources = {
         summary: "Samenvatting",
         transcript: "Transcript",
         addNotes: "Notities aanvullen",
-      },
 
-      tabs: {
-        home: "Home",
-        record: "Opname",
-        interactions: "Interacties",
-        settings: "Instellingen",
+        // ✅ TOEGEVOEGD (status mapping)
+        status: {
+          Voltooid: "Voltooid",
+          "In afwachting": "In afwachting",
+          Verwerking: "Verwerking",
+          Fout: "Fout",
+        },
       },
 
       interactions: {
@@ -98,6 +120,20 @@ const resources = {
         errorTitle: "Er ging iets mis",
         emptyTitle: "Geen interacties gevonden",
         emptyDescription: "Interacties verschijnen hier zodra ze bestaan.",
+      },
+
+      tabs: {
+        home: "Home",
+        record: "Opname",
+        interactions: "Interacties",
+        settings: "Instellingen",
+      },
+
+      // ✅ TOEGEVOEGD
+      common: {
+        delete: "Verwijder",
+        open: "Open",
+        anonymous: "Anoniem",
       },
     },
   },
@@ -113,6 +149,21 @@ const resources = {
         selectOrganization: "Select organization",
       },
 
+      recording: {
+        title: "Recording",
+        start: "Start recording",
+        stop: "Stop recording",
+        cancel: "Cancel",
+        streaming: "Streaming to Vesalius.ai...",
+
+        successTitle: "Recording sent",
+        successSubtitle: "Processing started.",
+        errorTitle: "Upload failed",
+        errorSubtitle: "Check your connection and try again.",
+        retry: "Retry",
+        back: "Back to overview",
+      },
+
       home: {
         title: "Home",
         quickActions: "QUICK ACTIONS",
@@ -120,12 +171,12 @@ const resources = {
         searchInteraction: "Search interaction",
         upcoming: "UPCOMING APPOINTMENT",
         recent: "RECENTLY VIEWED",
-      },
-      tabs: {
-        home: "Home",
-        record: "Record",
-        interactions: "Interactions",
-        settings: "Settings",
+
+        // ✅ TOEGEVOEGD
+        noRecent: "No recent interactions",
+        noRecentDescription: "Interactions you open will appear here.",
+        noUpcoming: "No upcoming appointments",
+        noUpcomingDescription: "You currently have no scheduled interactions.",
       },
 
       patient: {
@@ -184,6 +235,14 @@ const resources = {
         summary: "Summary",
         transcript: "Transcript",
         addNotes: "Add notes",
+
+        // ✅ TOEGEVOEGD
+        status: {
+          Voltooid: "Completed",
+          "In afwachting": "Pending",
+          Verwerking: "Processing",
+          Fout: "Error",
+        },
       },
 
       interactions: {
@@ -194,6 +253,20 @@ const resources = {
         errorTitle: "Something went wrong",
         emptyTitle: "No interactions found",
         emptyDescription: "Interactions will appear here once they exist.",
+      },
+
+      tabs: {
+        home: "Home",
+        record: "Record",
+        interactions: "Interactions",
+        settings: "Settings",
+      },
+
+      // ✅ TOEGEVOEGD
+      common: {
+        delete: "Delete",
+        open: "Open",
+        anonymous: "Anonymous",
       },
     },
   },
@@ -209,6 +282,20 @@ const resources = {
         selectOrganization: "Choisir l'organisation",
       },
 
+      recording: {
+        title: "Enregistrement",
+        start: "Démarrer enregistrement",
+        stop: "Arrêter enregistrement",
+        cancel: "Annuler",
+        streaming: "Envoi vers Vesalius.ai...",
+
+        successTitle: "Enregistrement envoyé",
+        successSubtitle: "Traitement en cours.",
+        errorTitle: "Échec de l'envoi",
+        errorSubtitle: "Vérifiez votre connexion et réessayez.",
+        retry: "Réessayer",
+        back: "Retour à l’aperçu",
+      },
       home: {
         title: "Accueil",
         quickActions: "ACTIONS RAPIDES",
@@ -216,13 +303,13 @@ const resources = {
         searchInteraction: "Rechercher interaction",
         upcoming: "RENDEZ-VOUS À VENIR",
         recent: "RÉCEMMENT CONSULTÉ",
-      },
 
-      tabs: {
-        home: "Accueil",
-        record: "Enregistrement",
-        interactions: "Interactions",
-        settings: "Paramètres",
+        // ✅ TOEGEVOEGD
+        noRecent: "Aucune interaction récente",
+        noRecentDescription: "Les interactions ouvertes apparaîtront ici.",
+        noUpcoming: "Aucun rendez-vous à venir",
+        noUpcomingDescription:
+          "Vous n'avez actuellement aucune interaction planifiée.",
       },
 
       patient: {
@@ -281,6 +368,14 @@ const resources = {
         summary: "Résumé",
         transcript: "Transcription",
         addNotes: "Ajouter des notes",
+
+        // ✅ TOEGEVOEGD
+        status: {
+          Voltooid: "Terminé",
+          "In afwachting": "En attente",
+          Verwerking: "Traitement",
+          Fout: "Erreur",
+        },
       },
 
       interactions: {
@@ -291,6 +386,20 @@ const resources = {
         errorTitle: "Une erreur s'est produite",
         emptyTitle: "Aucune interaction trouvée",
         emptyDescription: "Les interactions apparaîtront ici.",
+      },
+
+      tabs: {
+        home: "Accueil",
+        record: "Enregistrement",
+        interactions: "Interactions",
+        settings: "Paramètres",
+      },
+
+      // ✅ TOEGEVOEGD
+      common: {
+        delete: "Supprimer",
+        open: "Ouvrir",
+        anonymous: "Anonyme",
       },
     },
   },
