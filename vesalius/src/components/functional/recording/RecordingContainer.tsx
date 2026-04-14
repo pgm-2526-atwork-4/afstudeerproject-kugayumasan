@@ -13,7 +13,6 @@ import {
 } from "@core/modules/recording/recording.service";
 
 import { deleteInteraction } from "@core/modules/interactions/interactions.service";
-
 import { getPatientName } from "@functional/patients/patient.helpers";
 
 type Props = {
@@ -32,6 +31,20 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<TranscriptSession | null>(null);
+
+  const lastSentTextRef = useRef("");
+
+  /* -------------------------- */
+  /* 🔥 PERMISSION */
+  /* -------------------------- */
+
+  async function requestSpeechPermission() {
+    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
+
+    console.log("🎤 PERMISSION:", result);
+
+    return result.granted;
+  }
 
   /* -------------------------- */
   /* LOAD PATIENT */
@@ -59,54 +72,48 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   }, [conversationId, patient]);
 
   /* -------------------------- */
-  /* SPEECH EVENTS (FINAL FIX) */
+  /* SPEECH EVENTS */
   /* -------------------------- */
 
   useEffect(() => {
     const onResult = async (event: any) => {
-      console.log("🎤 EVENT:", JSON.stringify(event));
-
       let text = "";
-      let isFinal = false;
 
-      // ✅ ANDROID (meest voorkomend)
       if (event?.value && Array.isArray(event.value)) {
         text = event.value[0];
-        isFinal = true;
-      }
-
-      // ✅ iOS style
-      else if (event?.results?.[0]) {
-        const result = event.results[0];
-        text = result?.transcript || "";
-        isFinal = result?.isFinal ?? false;
-      }
-
-      // ✅ fallback
-      else if (event?.transcript) {
+      } else if (event?.results?.[0]) {
+        text = event.results[0]?.transcript || "";
+      } else if (event?.transcript) {
         text = event.transcript;
-        isFinal = true;
       }
 
-      console.log("📝 TEXT:", text, "FINAL:", isFinal);
+      if (!text || !transcriptRef.current) return;
 
-      if (!text || text.trim().length === 0 || !transcriptRef.current) return;
+      console.log("📝 TEXT:", text);
 
-      if (isFinal) {
-        setFinalText((prev) => (prev ? prev + " " + text : text));
-        setInterimText("");
+      setInterimText(text);
 
-        try {
-          await sendTranscriptChunk(
-            conversationId,
-            transcriptRef.current.id,
-            text,
-          );
-        } catch (e) {
-          console.log("❌ sendTranscriptChunk error:", e);
-        }
-      } else {
-        setInterimText(text);
+      const previous = lastSentTextRef.current;
+
+      if (!text.startsWith(previous)) {
+        lastSentTextRef.current = text;
+        return;
+      }
+
+      const diff = text.slice(previous.length).trim();
+
+      if (!diff) return;
+
+      lastSentTextRef.current = text;
+
+      try {
+        await sendTranscriptChunk(
+          conversationId,
+          transcriptRef.current.id,
+          diff,
+        );
+      } catch (e) {
+        console.log("❌ send diff error:", e);
       }
     };
 
@@ -123,9 +130,17 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   async function handleStartRecording() {
     try {
+      const granted = await requestSpeechPermission();
+
+      if (!granted) {
+        console.log("❌ Microphone permission denied");
+        return;
+      }
+
       setFinalText("");
       setInterimText("");
       setElapsed(0);
+      lastSentTextRef.current = "";
 
       timerRef.current = setInterval(() => {
         setElapsed((t) => t + 1);
@@ -135,6 +150,8 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
       const transcript = await createTranscript(conversationId);
       transcriptRef.current = transcript;
+
+      console.log("🎤 STARTING SPEECH...");
 
       ExpoSpeechRecognitionModule.start({
         lang: "nl-NL",
@@ -159,6 +176,9 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       setIsRecording(false);
 
       ExpoSpeechRecognitionModule.stop();
+
+      // 🔥 BELANGRIJK → wacht op laatste speech event
+      await new Promise((r) => setTimeout(r, 500));
 
       await finalizeTranscript(conversationId, transcriptRef.current.id);
 
@@ -196,7 +216,7 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       patientName={patientName}
       isRecording={isRecording}
       elapsed={elapsed}
-      liveText={`${finalText} ${interimText}`}
+      liveText={interimText}
       onStartRecording={handleStartRecording}
       onStopRecording={handleStopRecording}
       onBack={handleCancel}

@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   Pressable,
+  KeyboardAvoidingView,
 } from "react-native";
 
 import Screen from "@design/ui/ScreenLayout";
