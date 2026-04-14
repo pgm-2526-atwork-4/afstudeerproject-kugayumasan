@@ -10,6 +10,7 @@ import { conversationService } from "@core/modules/interactions/conversations.se
 
 import type { Patient } from "@core/modules/patients/patients.types";
 
+// DUMMY PATIENT
 const ANONYMOUS_PATIENT_ID = "5e0fdaf0-4b58-4bb5-9e69-f934090856d4";
 
 export default function CreateInteractionContainer() {
@@ -67,7 +68,6 @@ export default function CreateInteractionContainer() {
 
         let conversationId = params.conversationId;
 
-        // ALS GEEN BESTAANDE → maak nieuwe
         if (!conversationId) {
           const patientId = isAnonymous ? ANONYMOUS_PATIENT_ID : patient?.id;
 
@@ -77,12 +77,12 @@ export default function CreateInteractionContainer() {
             patient_id: patientId,
             institution_id: selectedInstitutionId,
             doctor_id: doctorId,
+            is_anonymous: isAnonymous,
           });
 
           conversationId = conversation.id;
         }
 
-        // naar recording met juiste conversation
         router.push(`/(app)/interactions/record/${conversationId}`);
       } catch (error) {
         console.error("Failed starting recording", error);
