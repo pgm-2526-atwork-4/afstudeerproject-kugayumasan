@@ -18,6 +18,8 @@ import { useTranslation } from "react-i18next";
 
 type SelectKey = "language" | "org" | null;
 
+type Option = { label: string; value: string };
+
 type Props = {
   onLogout: () => void;
   profileName?: string;
@@ -30,20 +32,14 @@ type Props = {
   setOpenSelect: React.Dispatch<React.SetStateAction<SelectKey>>;
   onChangeLanguage: (v: string) => void;
   onChangeOrganization: (v: string) => void;
-};
 
-type Option = { label: string; value: string };
+  organizationOptions: Option[]; // ✅ FIX
+};
 
 const LANGUAGE_OPTIONS: Option[] = [
   { label: "Nederlands", value: "nl" },
   { label: "Engels", value: "en" },
   { label: "Frans", value: "fr" },
-];
-
-const ORG_OPTIONS: Option[] = [
-  { label: "Metropolitan Hospital", value: "metro-hospital" },
-  { label: "City Clinic", value: "city-clinic" },
-  { label: "Central Medical Center", value: "central-medical" },
 ];
 
 function getLabel(value: string, options: Option[]) {
@@ -93,12 +89,7 @@ function InlineSelect({
             open ? styles.select__chevronWrapOpen : null,
           ]}
         >
-          <ChevronDown
-            size={18}
-            strokeWidth={1.5}
-            color={COLORS.text}
-            style={styles.select__chevronIcon}
-          />
+          <ChevronDown size={18} strokeWidth={1.5} color={COLORS.text} />
         </View>
       </Pressable>
 
@@ -157,6 +148,7 @@ export default function SettingsScreen({
   setOpenSelect,
   onChangeLanguage,
   onChangeOrganization,
+  organizationOptions, // ✅ FIX
 }: Props) {
   const { t } = useTranslation();
 
@@ -224,7 +216,7 @@ export default function SettingsScreen({
               headerTitle={t("settings.selectOrganization")}
               placeholder={t("settings.selectOrganization")}
               value={organization}
-              options={ORG_OPTIONS}
+              options={organizationOptions} // ✅ FIX
               open={openSelect === "org"}
               onToggle={() =>
                 setOpenSelect((p) => (p === "org" ? null : "org"))
@@ -330,7 +322,7 @@ const styles = StyleSheet.create({
 
   footer: {
     paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.xl,
+    paddingVertical: SPACING.md,
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
@@ -364,7 +356,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: "180deg" }],
     opacity: 0.85,
   },
-  select__chevronIcon: {},
 
   select__dropdown: {
     marginTop: SPACING.sm,
