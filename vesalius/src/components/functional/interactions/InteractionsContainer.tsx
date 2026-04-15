@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef } from "react";
 import { router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native"; // ✅ FIX
+
 import InteractionsScreen from "@design/screens/InteractionsScreen";
 import { useSession } from "@core/modules/session/session.context";
 import { useInteractions } from "@functional/interactions/useInteractions";
@@ -105,6 +107,15 @@ export default function InteractionsContainer() {
     if (!selectedInstitutionId) return;
     loadInteractions(selectedInstitutionId);
   }, [loadInteractions, selectedInstitutionId]);
+
+  // ✅ FIX: reload lijst wanneer je terugkomt op screen
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!selectedInstitutionId) return;
+
+      loadInteractions(selectedInstitutionId);
+    }, [selectedInstitutionId]),
+  );
 
   const handleDeleteInteraction = useCallback(
     (id: string) => {
