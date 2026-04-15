@@ -82,4 +82,6 @@ export async function finalizeTranscript(
   );
 }
 
-
+export async function getSpeechToken(): Promise<SpeechTokenResponse> {
+  return http.get<SpeechTokenResponse>("/azure/speech-token");
+}
