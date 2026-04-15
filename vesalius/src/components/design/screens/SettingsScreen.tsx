@@ -17,7 +17,6 @@ import { RADIUS } from "@style/radius";
 import { useTranslation } from "react-i18next";
 
 type SelectKey = "language" | "org" | null;
-
 type Option = { label: string; value: string };
 
 type Props = {
@@ -33,7 +32,7 @@ type Props = {
   onChangeLanguage: (v: string) => void;
   onChangeOrganization: (v: string) => void;
 
-  organizationOptions: Option[]; // ✅ FIX
+  organizationOptions: Option[];
 };
 
 const LANGUAGE_OPTIONS: Option[] = [
@@ -148,7 +147,7 @@ export default function SettingsScreen({
   setOpenSelect,
   onChangeLanguage,
   onChangeOrganization,
-  organizationOptions, // ✅ FIX
+  organizationOptions,
 }: Props) {
   const { t } = useTranslation();
 
@@ -163,7 +162,7 @@ export default function SettingsScreen({
       >
         <View style={styles.profile}>
           <View style={styles.avatar}>
-            <User size={32} color={COLORS.background.white} strokeWidth={1.5} />
+            <User size={32} color={COLORS.background.white} />
           </View>
 
           <View style={{ flex: 1 }}>
@@ -175,12 +174,7 @@ export default function SettingsScreen({
         <View style={styles.section}>
           <View style={styles.field}>
             <View style={styles.label}>
-              <Globe
-                size={16}
-                strokeWidth={1.5}
-                color={COLORS.text}
-                style={{ opacity: 0.6 }}
-              />
+              <Globe size={16} color={COLORS.text} style={{ opacity: 0.6 }} />
               <Text style={styles.labelText}>{t("settings.language")}</Text>
             </View>
 
@@ -205,7 +199,6 @@ export default function SettingsScreen({
             <View style={styles.label}>
               <Building2
                 size={16}
-                strokeWidth={1.5}
                 color={COLORS.text}
                 style={{ opacity: 0.6 }}
               />
@@ -216,7 +209,7 @@ export default function SettingsScreen({
               headerTitle={t("settings.selectOrganization")}
               placeholder={t("settings.selectOrganization")}
               value={organization}
-              options={organizationOptions} // ✅ FIX
+              options={organizationOptions}
               open={openSelect === "org"}
               onToggle={() =>
                 setOpenSelect((p) => (p === "org" ? null : "org"))
@@ -237,6 +230,7 @@ export default function SettingsScreen({
         </View>
       </ScrollView>
 
+      {/* ✅ PERFECT FIX */}
       <View style={styles.footer}>
         <Button
           variant="outline"
@@ -244,7 +238,7 @@ export default function SettingsScreen({
           style={{ borderColor: COLORS.error, width: "100%" }}
           textStyle={{ color: COLORS.error, fontWeight: "500" }}
         >
-          <LogOut size={18} strokeWidth={1.5} color={COLORS.error} />
+          <LogOut size={18} color={COLORS.error} />
           <Text style={{ marginLeft: SPACING.sm }}>{t("settings.logout")}</Text>
         </Button>
       </View>
@@ -267,6 +261,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+
   avatar: {
     width: 64,
     height: 64,
@@ -275,29 +270,28 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   name: {
     fontSize: 14,
     fontWeight: "600",
     color: COLORS.text,
   },
+
   email: {
     fontSize: 12,
     color: COLORS.text,
     opacity: 0.6,
   },
 
-  section: {
-    gap: SPACING.xl,
-  },
-  field: {
-    gap: SPACING.sm,
-  },
+  section: { gap: SPACING.xl },
+  field: { gap: SPACING.sm },
 
   label: {
     flexDirection: "row",
     alignItems: "center",
     gap: SPACING.sm,
   },
+
   labelText: {
     fontSize: 12,
     color: COLORS.text,
@@ -308,12 +302,14 @@ const styles = StyleSheet.create({
     gap: SPACING.xs,
     marginTop: SPACING.md,
   },
+
   appName: {
     fontSize: 12,
     fontWeight: "500",
     color: COLORS.text,
     opacity: 0.8,
   },
+
   muted: {
     fontSize: 12,
     color: COLORS.text,
@@ -322,7 +318,7 @@ const styles = StyleSheet.create({
 
   footer: {
     paddingHorizontal: SPACING.xl,
-    paddingVertical: SPACING.md,
+    paddingTop: SPACING.md, // ✅ FIX (was paddingVertical)
     borderTopWidth: 1,
     borderTopColor: COLORS.border,
   },
@@ -338,13 +334,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
   },
+
   select__controlOpen: {
     borderColor: COLORS.primary,
   },
+
   select__text: {
     fontSize: 12,
     color: COLORS.text,
   },
+
   select__placeholder: {
     color: COLORS.placeholder,
   },
@@ -352,6 +351,7 @@ const styles = StyleSheet.create({
   select__chevronWrap: {
     opacity: 0.6,
   },
+
   select__chevronWrapOpen: {
     transform: [{ rotate: "180deg" }],
     opacity: 0.85,
@@ -365,15 +365,16 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.background.white,
     overflow: "hidden",
   },
+
   select__dropdownHeader: {
     height: 40,
     paddingHorizontal: SPACING.md,
-    flexDirection: "row",
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+
   select__dropdownTitle: {
     fontSize: 12,
     fontWeight: "600",
@@ -386,22 +387,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.border,
   },
+
   select__itemLast: {
     borderBottomWidth: 0,
   },
+
   select__itemActive: {
     backgroundColor: COLORS.background.tint,
   },
 
   select__itemRow: {
     flexDirection: "row",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
   },
+
   select__itemText: {
     fontSize: 12,
     color: COLORS.text,
   },
+
   select__itemTextActive: {
     color: COLORS.primary,
     fontWeight: "700",
