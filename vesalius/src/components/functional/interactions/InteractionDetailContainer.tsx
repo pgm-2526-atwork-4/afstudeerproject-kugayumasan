@@ -145,7 +145,7 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
   return (
     <InteractionDetailScreen
       interaction={interaction}
-      onBack={() => router.back()}
+      onBack={() => router.replace("/(app)/(tabs)/interactions")}
       onAddNotes={handleAddNotes}
     />
   );

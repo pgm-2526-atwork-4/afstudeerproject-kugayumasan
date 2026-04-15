@@ -19,7 +19,7 @@ export default function InteractionFeedbackRoute() {
         router.replace(`/(app)/interactions/record/${interactionId}`);
       }}
       onGoBack={() => {
-        router.replace("/(app)/(tabs)/record");
+        router.replace("/(app)/(tabs)/interactions");
       }}
       onGoToInteraction={() => {
         router.replace(`/(app)/interactions/${interactionId}`);
