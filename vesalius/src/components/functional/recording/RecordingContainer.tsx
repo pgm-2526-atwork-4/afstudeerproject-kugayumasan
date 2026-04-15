@@ -1,6 +1,5 @@
 import React, { useRef, useState, useEffect } from "react";
 import { router } from "expo-router";
-import { ExpoSpeechRecognitionModule } from "expo-speech-recognition";
 
 import RecordingScreen from "@design/screens/RecordingScreen";
 
@@ -14,6 +13,13 @@ import {
 
 import { deleteInteraction } from "@core/modules/interactions/interactions.service";
 import { getPatientName } from "@functional/patients/patient.helpers";
+
+import {
+  startAudioStream,
+  stopAudioStream,
+} from "@core/modules/recording/audio.service";
+import * as SpeechSDK from "microsoft-cognitiveservices-speech-sdk";
+import { http } from "@core/network/http";
 
 type Props = {
   conversationId: string;
@@ -32,19 +38,8 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<TranscriptSession | null>(null);
 
-  const lastSentTextRef = useRef("");
-
-  /* -------------------------- */
-  /* 🔥 PERMISSION */
-  /* -------------------------- */
-
-  async function requestSpeechPermission() {
-    const result = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-
-    console.log("🎤 PERMISSION:", result);
-
-    return result.granted;
-  }
+  const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null);
+  const pushStreamRef = useRef<any>(null);
 
   /* -------------------------- */
   /* LOAD PATIENT */
@@ -72,75 +67,38 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   }, [conversationId, patient]);
 
   /* -------------------------- */
-  /* SPEECH EVENTS */
+  /* FORMAT */
   /* -------------------------- */
 
-  useEffect(() => {
-    const onResult = async (event: any) => {
-      let text = "";
+  function formatSentence(text: string) {
+    let t = text.trim();
+    if (!t) return "";
 
-      if (event?.value && Array.isArray(event.value)) {
-        text = event.value[0];
-      } else if (event?.results?.[0]) {
-        text = event.results[0]?.transcript || "";
-      } else if (event?.transcript) {
-        text = event.transcript;
-      }
+    t = t.charAt(0).toUpperCase() + t.slice(1);
 
-      if (!text || !transcriptRef.current) return;
+    // skip halve zinnen zoals "en"
+    if (t.endsWith(" en")) {
+      return "";
+    }
 
-      console.log("📝 TEXT:", text);
+    if (!/[.!?]$/.test(t)) {
+      t += ".";
+    }
 
-      setInterimText(text);
-
-      const previous = lastSentTextRef.current;
-
-      if (!text.startsWith(previous)) {
-        lastSentTextRef.current = text;
-        return;
-      }
-
-      const diff = text.slice(previous.length).trim();
-
-      if (!diff) return;
-
-      lastSentTextRef.current = text;
-
-      try {
-        await sendTranscriptChunk(
-          conversationId,
-          transcriptRef.current.id,
-          diff,
-        );
-      } catch (e) {
-        console.log("❌ send diff error:", e);
-      }
-    };
-
-    (ExpoSpeechRecognitionModule as any).addListener("result", onResult);
-
-    return () => {
-      (ExpoSpeechRecognitionModule as any).removeAllListeners("result");
-    };
-  }, []);
+    return t;
+  }
 
   /* -------------------------- */
-  /* START */
+  /* START RECORDING */
   /* -------------------------- */
 
   async function handleStartRecording() {
     try {
-      const granted = await requestSpeechPermission();
-
-      if (!granted) {
-        console.log("❌ Microphone permission denied");
-        return;
-      }
+      console.log("START RECORDING");
 
       setFinalText("");
       setInterimText("");
       setElapsed(0);
-      lastSentTextRef.current = "";
 
       timerRef.current = setInterval(() => {
         setElapsed((t) => t + 1);
@@ -151,15 +109,83 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       const transcript = await createTranscript(conversationId);
       transcriptRef.current = transcript;
 
-      console.log("🎤 STARTING SPEECH...");
+      console.log("TRANSCRIPT CREATED:", transcript.id);
 
-      ExpoSpeechRecognitionModule.start({
-        lang: "nl-NL",
-        continuous: true,
-        interimResults: true,
+      const { token, region } = await http.get<any>("/azure/speech-token");
+
+      console.log("TOKEN OK:", region);
+
+      const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
+        token,
+        region,
+      );
+
+      speechConfig.speechRecognitionLanguage = "nl-BE";
+
+      const format = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1);
+
+      const pushStream = SpeechSDK.AudioInputStream.createPushStream(format);
+      pushStreamRef.current = pushStream;
+
+      const audioConfig = SpeechSDK.AudioConfig.fromStreamInput(pushStream);
+
+      const recognizer = new SpeechSDK.SpeechRecognizer(
+        speechConfig,
+        audioConfig,
+      );
+
+      recognizerRef.current = recognizer;
+
+      /* INTERIM */
+      recognizer.recognizing = (_, event) => {
+        const text = event.result.text;
+        if (text) {
+          setInterimText(text);
+        }
+      };
+
+      /* FINAL */
+      recognizer.recognized = async (_, event) => {
+        if (event.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
+          const raw = event.result.text;
+          if (!raw) return;
+
+          const text = formatSentence(raw);
+          if (!text) return; // skip invalid zinnen
+
+          console.log("🟢 FINAL:", text);
+
+          setFinalText((prev) => {
+            if (!prev) return text;
+            if (prev.includes(text)) return prev;
+            return prev.trim() + " " + text;
+          });
+
+          setInterimText("");
+
+          try {
+            await sendTranscriptChunk(
+              conversationId,
+              transcriptRef.current!.id,
+              text,
+            );
+          } catch (e) {
+            console.log(" send error:", e);
+          }
+        }
+      };
+
+      recognizer.startContinuousRecognitionAsync();
+
+      console.log("🚀 SESSION STARTED");
+
+      /* 🎧 AUDIO STREAM */
+      startAudioStream((chunk: Uint8Array) => {
+        const safeBuffer = new Uint8Array(chunk).buffer;
+        pushStream.write(safeBuffer);
       });
     } catch (e) {
-      console.log("❌ start error:", e);
+      console.log(" START ERROR:", e);
     }
   }
 
@@ -169,25 +195,36 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   async function handleStopRecording() {
     try {
+      console.log(" STOP RECORDING");
+
       if (!transcriptRef.current) return;
 
       if (timerRef.current) clearInterval(timerRef.current);
 
       setIsRecording(false);
 
-      ExpoSpeechRecognitionModule.stop();
+      //  FIX: eerst Azure stoppen
+      recognizerRef.current?.stopContinuousRecognitionAsync(() => {
+        recognizerRef.current?.close();
+      });
 
-      // 🔥 BELANGRIJK → wacht op laatste speech event
+      //  daarna audio stream stoppen
+      stopAudioStream();
+
+      pushStreamRef.current?.close();
+
       await new Promise((r) => setTimeout(r, 500));
 
       await finalizeTranscript(conversationId, transcriptRef.current.id);
+
+      console.log("✅ FINALIZED");
 
       router.replace({
         pathname: `/(app)/interactions/feedback/${conversationId}`,
         params: { status: "success" },
       });
     } catch (e) {
-      console.log("❌ stop error:", e);
+      console.log(" STOP ERROR:", e);
     }
   }
 
@@ -201,7 +238,7 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
         await deleteInteraction(conversationId);
       }
     } catch (e) {
-      console.log("❌ cancel error:", e);
+      console.log("cancel error:", e);
     }
 
     router.back();
@@ -216,7 +253,7 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       patientName={patientName}
       isRecording={isRecording}
       elapsed={elapsed}
-      liveText={interimText}
+      liveText={`${finalText}${interimText ? " " + interimText : ""}`}
       onStartRecording={handleStartRecording}
       onStopRecording={handleStopRecording}
       onBack={handleCancel}
