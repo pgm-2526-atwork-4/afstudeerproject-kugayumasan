@@ -8,7 +8,6 @@ import {
   FlatList,
 } from "react-native";
 import { useTranslation } from "react-i18next";
-import { useFocusEffect } from "@react-navigation/native"; // 🔥 toegevoegd
 
 import Screen from "@design/ui/ScreenLayout";
 import ScreenHeader from "@design/ui/ScreenHeader";
@@ -37,9 +36,6 @@ type Props = {
 
   onNewInteraction: () => void;
   onViewInteraction: (id: string) => void;
-
-  // 🔥 toevoegen zodat parent refresh kan doen
-  onRefresh?: () => void;
 };
 
 export default function InteractionsScreen({
@@ -50,22 +46,9 @@ export default function InteractionsScreen({
   onNewInteraction,
   onDeleteInteraction,
   onViewInteraction,
-  onRefresh, // 🔥 nieuw
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const { t } = useTranslation();
-
-  /* -------------------------- */
-  /* 🔥 AUTO REFRESH ON FOCUS */
-  /* -------------------------- */
-
-  useFocusEffect(
-    useCallback(() => {
-      if (onRefresh) {
-        onRefresh();
-      }
-    }, [onRefresh]),
-  );
 
   /* -------------------------- */
 
