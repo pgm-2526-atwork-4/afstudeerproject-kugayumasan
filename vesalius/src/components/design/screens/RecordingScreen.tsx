@@ -9,6 +9,7 @@ import { Square, Mic } from "lucide-react-native";
 import { COLORS } from "@style/colors";
 import { useTranslation } from "react-i18next";
 
+
 type Props = {
   patientName: string;
   isRecording: boolean;
@@ -29,6 +30,7 @@ export default function RecordingScreen({
   liveText,
 }: Props) {
   const { t } = useTranslation();
+  
 
   const [waveformBars, setWaveformBars] = useState<number[]>(
     Array.from({ length: 30 }, () => Math.random()),
@@ -162,7 +164,14 @@ export default function RecordingScreen({
 
       {isRecording && liveText ? (
         <View style={{ marginTop: 20, paddingHorizontal: 16 }}>
-          <Text style={{ color: COLORS.text, fontSize: 14 }}>{liveText}</Text>
+          <Text style={{ fontSize: 14, lineHeight: 22 }}>
+            <Text style={{ color: COLORS.text }}>
+              {liveText.split("\n\n").slice(0, -1).join("\n\n")}
+            </Text>
+            <Text style={{ color: COLORS.text, opacity: 0.4 }}>
+              {"\n\n" + liveText.split("\n\n").slice(-1)}
+            </Text>
+          </Text>
         </View>
       ) : null}
 
