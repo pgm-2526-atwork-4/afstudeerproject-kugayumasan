@@ -20,24 +20,30 @@ export default function LoginContainer() {
     setLoading(true);
 
     try {
-      // 1) Keycloak login -> tokens stored
       await authService.login(username, password);
 
-      // 2) Bootstrap -> fetch /users/me + select institution + store doctor/institution IDs
       const { me, selectedInstitutionId, doctorId } = await bootstrapSession();
 
-      // 3) Put in memory session state
       setSession({ me, selectedInstitutionId, doctorId });
       setHydrated(true);
 
-      // 4) Go to app
       router.replace("/(app)");
     } catch (e: any) {
-      // Clear everything (tokens + session IDs)
       await clearAllSession();
       setSession({ me: null, selectedInstitutionId: null, doctorId: null });
       setHydrated(true);
-      setError(e?.message ?? "Login mislukt");
+
+      // User-friendly error mapping (NO dev errors exposed)
+      if (
+        e?.response?.status === 401 ||
+        e?.response?.data?.error === "invalid_grant"
+      ) {
+        setError("Gebruikersnaam of wachtwoord is onjuist");
+      } else if (e?.message?.includes("Network")) {
+        setError("Geen internetverbinding");
+      } else {
+        setError("Er ging iets mis. Probeer opnieuw.");
+      }
     } finally {
       setLoading(false);
     }

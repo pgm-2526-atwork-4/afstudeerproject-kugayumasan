@@ -23,9 +23,26 @@ type Props = {
 export default function LoginScreen({ onLogin, loading, error }: Props) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [formError, setFormError] = useState<string | null>(null);
 
   const handleLogin = () => {
-    if (!username || !password) return;
+    setFormError(null);
+
+    if (!username.trim()) {
+      setFormError("Gebruikersnaam is verplicht");
+      return;
+    }
+
+    if (!password.trim()) {
+      setFormError("Wachtwoord is verplicht");
+      return;
+    }
+
+    if (password.length < 6) {
+      setFormError("Wachtwoord moet minimaal 6 karakters bevatten");
+      return;
+    }
+
     Keyboard.dismiss();
     onLogin(username, password);
   };
@@ -35,7 +52,6 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
       <Pressable style={styles.pressable} onPress={Keyboard.dismiss}>
         <View style={styles.login}>
           <View style={styles.login__content}>
-            {/* LOGO */}
             <View style={styles.login__brandRow}>
               <Image
                 source={require("@assets/images/logo.png")}
@@ -51,7 +67,10 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
                 label="Gebruikersnaam"
                 inputProps={{
                   value: username,
-                  onChangeText: setUsername,
+                  onChangeText: (text) => {
+                    setUsername(text);
+                    setFormError(null);
+                  },
                   placeholder: "Voer uw gebruikersnaam in",
                   autoCapitalize: "none",
                   editable: !loading,
@@ -64,7 +83,10 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
                 label="Wachtwoord"
                 inputProps={{
                   value: password,
-                  onChangeText: setPassword,
+                  onChangeText: (text) => {
+                    setPassword(text);
+                    setFormError(null);
+                  },
                   placeholder: "Voer uw wachtwoord in",
                   secureTextEntry: true,
                   editable: !loading,
@@ -73,7 +95,13 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
                 }}
               />
 
-              {error ? <Text style={styles.login__error}>{error}</Text> : null}
+              {/* ✅ Form validation first, backend error only if no form error */}
+              {formError && (
+                <Text style={styles.login__error}>{formError}</Text>
+              )}
+              {error && !formError && (
+                <Text style={styles.login__error}>{error}</Text>
+              )}
 
               <View style={styles.login__buttons}>
                 <Button
@@ -97,9 +125,7 @@ export default function LoginScreen({ onLogin, loading, error }: Props) {
 }
 
 const styles = StyleSheet.create({
-  pressable: {
-    flex: 1,
-  },
+  pressable: { flex: 1 },
 
   login: {
     flex: 1,
@@ -138,16 +164,6 @@ const styles = StyleSheet.create({
 
   login__form: {
     gap: SPACING.lg,
-  },
-
-  login__links: {
-    gap: SPACING.sm,
-    marginTop: SPACING.xs,
-  },
-
-  login__link: {
-    fontSize: 12,
-    color: COLORS.primary,
   },
 
   login__buttons: {
