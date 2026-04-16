@@ -4,6 +4,7 @@ import HomeScreen from "@design/screens/HomeScreen";
 
 import { useSession } from "@core/modules/session/session.context";
 import { useHomeInteractions } from "@functional/home/useHomeInteractions";
+import { useStartRecording } from "@functional/recording/useStartRecording";
 
 export default function HomeContainer() {
   const { selectedInstitutionId, doctorId } = useSession();
@@ -13,6 +14,8 @@ export default function HomeContainer() {
     doctorId,
   );
 
+  const { startRecording } = useStartRecording();
+
   return (
     <HomeScreen
       upcoming={upcoming}
@@ -21,6 +24,7 @@ export default function HomeContainer() {
       onNewInteraction={() => router.push("/(app)/(tabs)/record")}
       onViewAllInteractions={() => router.push("/(app)/(tabs)/interactions")}
       onViewInteraction={(id) => router.push(`/(app)/interactions/${id}`)}
+      onStartAnonymousRecording={() => startRecording(null, true)} 
     />
   );
 }
