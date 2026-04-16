@@ -1,23 +1,26 @@
 import { useCallback, useState } from "react";
 import { patientsService } from "@core/modules/patients/patients.service";
+import { useSession } from "@core/modules/session/session.context";
 import type { Patient } from "@core/modules/patients/patients.types";
 
 type UsePatientSearchResult = {
   patients: Patient[];
   isLoading: boolean;
   error: string | null;
-  searchPatients: (institutionId: string, query: string) => Promise<void>;
+  searchPatients: (query: string) => Promise<void>;
   clearResults: () => void;
 };
 
 export function usePatientSearch(): UsePatientSearchResult {
+  const { selectedInstitutionId } = useSession();
+
   const [patients, setPatients] = useState<Patient[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const searchPatients = useCallback(
-    async (institutionId: string, query: string) => {
-      if (!institutionId) {
+    async (query: string) => {
+      if (!selectedInstitutionId) {
         setError("Geen instelling geselecteerd.");
         setPatients([]);
         return;
@@ -30,7 +33,7 @@ export function usePatientSearch(): UsePatientSearchResult {
         const trimmedQuery = query.trim();
 
         const response = await patientsService.search({
-          institutionId,
+          institutionId: selectedInstitutionId,
           search: trimmedQuery || undefined,
           limit: 10,
         });
@@ -44,7 +47,7 @@ export function usePatientSearch(): UsePatientSearchResult {
         setIsLoading(false);
       }
     },
-    [],
+    [selectedInstitutionId],
   );
 
   const clearResults = useCallback(() => {
