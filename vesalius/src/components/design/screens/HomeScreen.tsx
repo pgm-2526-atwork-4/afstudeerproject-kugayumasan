@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, Pressable } from "react-native";
-import { Plus, Search } from "lucide-react-native";
+import { Plus, Search, Mic } from "lucide-react-native";
 import { useTranslation } from "react-i18next";
 
 import Screen from "@design/ui/ScreenLayout";
@@ -22,6 +22,9 @@ type Props = {
   onNewInteraction: () => void;
   onViewAllInteractions: () => void;
   onViewInteraction: (id: string) => void;
+
+  // ✅ NIEUW
+  onStartAnonymousRecording: () => void;
 };
 
 export default function HomeScreen({
@@ -30,6 +33,7 @@ export default function HomeScreen({
   onNewInteraction,
   onViewAllInteractions,
   onViewInteraction,
+  onStartAnonymousRecording,
 }: Props) {
   const { t } = useTranslation();
 
@@ -43,6 +47,30 @@ export default function HomeScreen({
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
+        {/* 🔥 ANONIEME OPNAME */}
+
+        <View>
+          <Text style={styles.sectionLabel}>
+            {t("home.anonymousRecording", "Anonieme opname")}
+          </Text>
+
+          <Pressable
+            onPress={onStartAnonymousRecording}
+            style={({ pressed }) => [
+              styles.anonymousBtn,
+              pressed && styles.pressedPrimary,
+            ]}
+          >
+            <View style={styles.anonymousIconBox}>
+              <Mic size={20} color={COLORS.background.white} />
+            </View>
+
+            <Text style={styles.anonymousText}>
+              {t("home.startAnonymousRecording", "Start anonieme opname")}
+            </Text>
+          </Pressable>
+        </View>
+
         {/* QUICK ACTIONS */}
 
         <View>
@@ -166,7 +194,38 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
+  /* 🔥 NIEUWE STYLES */
+
+  anonymousBtn: {
+    height: 56,
+    borderRadius: RADIUS.md,
+    backgroundColor: COLORS.primary,
+    paddingHorizontal: SPACING.lg,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  anonymousIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: RADIUS.md,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: SPACING.lg,
+  },
+
+  anonymousText: {
+    color: COLORS.background.white,
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
   pressed: {
     backgroundColor: COLORS.background.tint,
+  },
+
+  pressedPrimary: {
+    opacity: 0.8,
   },
 });
