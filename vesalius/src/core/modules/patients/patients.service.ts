@@ -14,6 +14,22 @@ function buildQuery(params: Record<string, string | number | undefined>) {
   return queryString ? `?${queryString}` : "";
 }
 
+
+export function createAnonymousPatientPayload(institutionId: string) {
+  const randomNumber = Math.floor(Math.random() * 100000).toString();
+
+  return {
+    first_name: "Patient",
+    last_name: randomNumber,
+    username: `Patient${randomNumber}`,
+    institution_id: institutionId,
+
+    birthdate: "1800-01-01",
+    email: "unknown@example.com",
+    phone: "+0000000000",
+  };
+}
+
 export const patientsService = {
   async search(params: SearchPatientsParams): Promise<Patient[]> {
     const { institutionId, ...query } = params;
