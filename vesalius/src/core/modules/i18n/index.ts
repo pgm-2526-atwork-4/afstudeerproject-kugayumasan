@@ -39,7 +39,10 @@ const resources = {
         upcoming: "AANKOMENDE AFSPRAAK",
         recent: "RECENT BEKEKEN",
 
-        // ✅ TOEGEVOEGD
+        // 🔥 NIEUW TOEGEVOEGD
+        anonymousRecording: "Anonieme opname",
+        startAnonymousRecording: "Start anonieme opname",
+
         noRecent: "Geen recente interacties",
         noRecentDescription: "Interacties die je opent verschijnen hier.",
         noUpcoming: "Geen aankomende afspraken",
@@ -103,7 +106,6 @@ const resources = {
         transcript: "Transcript",
         addNotes: "Notities aanvullen",
 
-        // ✅ TOEGEVOEGD (status mapping)
         status: {
           Voltooid: "Voltooid",
           "In afwachting": "In afwachting",
@@ -129,7 +131,6 @@ const resources = {
         settings: "Instellingen",
       },
 
-      // ✅ TOEGEVOEGD
       common: {
         delete: "Verwijder",
         open: "Open",
@@ -172,7 +173,10 @@ const resources = {
         upcoming: "UPCOMING APPOINTMENT",
         recent: "RECENTLY VIEWED",
 
-        // ✅ TOEGEVOEGD
+        // 🔥 NIEUW TOEGEVOEGD
+        anonymousRecording: "Anonymous recording",
+        startAnonymousRecording: "Start anonymous recording",
+
         noRecent: "No recent interactions",
         noRecentDescription: "Interactions you open will appear here.",
         noUpcoming: "No upcoming appointments",
@@ -236,7 +240,6 @@ const resources = {
         transcript: "Transcript",
         addNotes: "Add notes",
 
-        // ✅ TOEGEVOEGD
         status: {
           Voltooid: "Completed",
           "In afwachting": "Pending",
@@ -262,7 +265,6 @@ const resources = {
         settings: "Settings",
       },
 
-      // ✅ TOEGEVOEGD
       common: {
         delete: "Delete",
         open: "Open",
@@ -296,6 +298,7 @@ const resources = {
         retry: "Réessayer",
         back: "Retour à l’aperçu",
       },
+
       home: {
         title: "Accueil",
         quickActions: "ACTIONS RAPIDES",
@@ -304,7 +307,10 @@ const resources = {
         upcoming: "RENDEZ-VOUS À VENIR",
         recent: "RÉCEMMENT CONSULTÉ",
 
-        // ✅ TOEGEVOEGD
+        // 🔥 NIEUW TOEGEVOEGD
+        anonymousRecording: "Enregistrement anonyme",
+        startAnonymousRecording: "Démarrer un enregistrement anonyme",
+
         noRecent: "Aucune interaction récente",
         noRecentDescription: "Les interactions ouvertes apparaîtront ici.",
         noUpcoming: "Aucun rendez-vous à venir",
@@ -369,7 +375,6 @@ const resources = {
         transcript: "Transcription",
         addNotes: "Ajouter des notes",
 
-        // ✅ TOEGEVOEGD
         status: {
           Voltooid: "Terminé",
           "In afwachting": "En attente",
@@ -395,7 +400,6 @@ const resources = {
         settings: "Paramètres",
       },
 
-      // ✅ TOEGEVOEGD
       common: {
         delete: "Supprimer",
         open: "Ouvrir",
