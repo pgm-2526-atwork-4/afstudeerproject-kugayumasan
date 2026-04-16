@@ -8,6 +8,9 @@ import { usePatientSearch } from "@functional/patients/usePatientSearch";
 
 import { conversationService } from "@core/modules/interactions/conversations.service";
 
+// 🔥 FIX: import toevoegen
+import { createConsultation } from "@core/modules/recording/recording.service";
+
 import type { Patient } from "@core/modules/patients/patients.types";
 
 // DUMMY PATIENT
@@ -81,6 +84,9 @@ export default function CreateInteractionContainer() {
           });
 
           conversationId = conversation.id;
+
+          // 🔥🔥🔥 HIER IS DE FIX (ZEER BELANGRIJK)
+          await createConsultation(conversationId);
         }
 
         router.push(`/(app)/interactions/record/${conversationId}`);

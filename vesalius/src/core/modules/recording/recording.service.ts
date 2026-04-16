@@ -1,5 +1,4 @@
 import { http } from "@core/network/http";
-import { authService } from "@core/modules/auth/auth.service";
 
 /* -------------------- TYPES -------------------- */
 
@@ -24,6 +23,12 @@ export interface Transcript {
   created_at?: string | null;
 }
 
+export interface Consultation {
+  id: string;
+  consultation_notes: string | null;
+  transcripts: Transcript[];
+}
+
 export interface Conversation {
   id: string;
   consultation_notes: string | null;
@@ -36,6 +41,27 @@ export interface Conversation {
   status?: string;
 }
 
+/* -------------------- CONSULTATION -------------------- */
+
+export async function getConsultation(
+  conversationId: string,
+): Promise<Consultation | null> {
+  try {
+    return await http.get(`/conversations/${conversationId}/consultation`);
+  } catch (e: any) {
+    if (e?.status === 404) return null;
+    throw e;
+  }
+}
+
+export async function createConsultation(
+  conversationId: string,
+): Promise<Consultation> {
+  return http.post(`/consultations`, {
+    conversation_id: conversationId,
+  });
+}
+
 /* -------------------- GETTERS -------------------- */
 
 export async function getConversation(
@@ -45,40 +71,36 @@ export async function getConversation(
 }
 
 export async function getTranscripts(
-  conversationId: string,
+  consultationId: string,
 ): Promise<Transcript[]> {
-  return http.get(`/conversations/${conversationId}/transcripts`);
+  return http.get(`/consultations/${consultationId}/transcripts`);
 }
 
 /* -------------------- REALTIME FLOW -------------------- */
 
 export async function createTranscript(
-  conversationId: string,
+  consultationId: string,
 ): Promise<TranscriptSession> {
-  return http.post(
-    `/conversations/${conversationId}/transcripts/realtime/create`,
-  );
+  return http.post(`/consultations/${consultationId}/transcripts/realtime`);
 }
 
 export async function sendTranscriptChunk(
-  conversationId: string,
+  consultationId: string,
   transcriptId: string,
   text: string,
 ) {
   return http.patch(
-    `/conversations/${conversationId}/transcripts/${transcriptId}/realtime/update`,
-    {
-      text,
-    },
+    `/consultations/${consultationId}/transcripts/${transcriptId}/realtime`,
+    { text },
   );
 }
 
 export async function finalizeTranscript(
-  conversationId: string,
+  consultationId: string,
   transcriptId: string,
 ) {
   return http.post(
-    `/conversations/${conversationId}/transcripts/${transcriptId}/realtime/finalize`,
+    `/consultations/${consultationId}/transcripts/${transcriptId}/realtime/finalize`,
   );
 }
 

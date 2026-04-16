@@ -9,20 +9,20 @@ export function startAudioStream(onData: AudioCallback) {
   console.log("🎤 START AUDIO STREAM");
 
   LiveAudioStream.init({
-    sampleRate: 16000, // CRUCIAAL voor Azure
+    sampleRate: 16000,
     channels: 1,
     bitsPerSample: 16,
     audioSource: 6,
     bufferSize: 4096,
-
-    // FIX: verplicht volgens types
-    wavFile: "", // we gebruiken het niet
-  } as any); // TS fix (types zijn broken)
+    wavFile: "",
+  } as any);
 
   LiveAudioStream.on("data", (data: string) => {
     try {
       const audioBuffer = Buffer.from(data, "base64");
-      onData(audioBuffer);
+
+      // FIX: direct Uint8Array was eig niet nodig 
+      onData(new Uint8Array(audioBuffer));
     } catch (e) {
       console.log("AUDIO PARSE ERROR:", e);
     }

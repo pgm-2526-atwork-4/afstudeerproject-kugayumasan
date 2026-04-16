@@ -9,6 +9,8 @@ import {
   sendTranscriptChunk,
   TranscriptSession,
   getConversation,
+  getConsultation,
+  createConsultation,
 } from "@core/modules/recording/recording.service";
 
 import { deleteInteraction } from "@core/modules/interactions/interactions.service";
@@ -37,6 +39,7 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const transcriptRef = useRef<TranscriptSession | null>(null);
+  const consultationIdRef = useRef<string | null>(null);
 
   const recognizerRef = useRef<SpeechSDK.SpeechRecognizer | null>(null);
   const pushStreamRef = useRef<any>(null);
@@ -76,14 +79,9 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
     t = t.charAt(0).toUpperCase() + t.slice(1);
 
-    // skip halve zinnen zoals "en"
-    if (t.endsWith(" en")) {
-      return "";
-    }
+    if (t.endsWith(" en")) return "";
 
-    if (!/[.!?]$/.test(t)) {
-      t += ".";
-    }
+    if (!/[.!?]$/.test(t)) t += ".";
 
     return t;
   }
@@ -93,6 +91,8 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   /* -------------------------- */
 
   async function handleStartRecording() {
+    if (isRecording) return;
+
     try {
       console.log("START RECORDING");
 
@@ -100,20 +100,21 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       setInterimText("");
       setElapsed(0);
 
-      timerRef.current = setInterval(() => {
-        setElapsed((t) => t + 1);
-      }, 1000);
+      // FIX: altijd geldige consultation
+      let consultation = await getConsultation(conversationId);
 
-      setIsRecording(true);
+      if (!consultation) {
+        consultation = await createConsultation(conversationId);
+      }
 
-      const transcript = await createTranscript(conversationId);
+      consultationIdRef.current = consultation.id;
+
+      const transcript = await createTranscript(consultation.id);
       transcriptRef.current = transcript;
 
       console.log("TRANSCRIPT CREATED:", transcript.id);
 
       const { token, region } = await http.get<any>("/azure/speech-token");
-
-      console.log("TOKEN OK:", region);
 
       const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(
         token,
@@ -123,7 +124,6 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
       speechConfig.speechRecognitionLanguage = "nl-BE";
 
       const format = SpeechSDK.AudioStreamFormat.getWaveFormatPCM(16000, 16, 1);
-
       const pushStream = SpeechSDK.AudioInputStream.createPushStream(format);
       pushStreamRef.current = pushStream;
 
@@ -136,54 +136,53 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
 
       recognizerRef.current = recognizer;
 
-      /* INTERIM */
       recognizer.recognizing = (_, event) => {
-        const text = event.result.text;
-        if (text) {
-          setInterimText(text);
+        if (event.result.text) {
+          setInterimText(event.result.text);
         }
       };
 
-      /* FINAL */
       recognizer.recognized = async (_, event) => {
         if (event.result.reason === SpeechSDK.ResultReason.RecognizedSpeech) {
           const raw = event.result.text;
           if (!raw) return;
 
           const text = formatSentence(raw);
-          if (!text) return; // skip invalid zinnen
+          if (!text) return;
 
-          console.log("🟢 FINAL:", text);
-
-          setFinalText((prev) => {
-            if (!prev) return text;
-            if (prev.includes(text)) return prev;
-            return prev.trim() + " " + text;
-          });
+          setFinalText((prev) =>
+            !prev ? text : prev.includes(text) ? prev : prev + " " + text,
+          );
 
           setInterimText("");
 
-          try {
+          if (consultationIdRef.current && transcriptRef.current) {
             await sendTranscriptChunk(
-              conversationId,
-              transcriptRef.current!.id,
+              consultationIdRef.current,
+              transcriptRef.current.id,
               text,
             );
-          } catch (e) {
-            console.log(" send error:", e);
           }
         }
       };
 
       recognizer.startContinuousRecognitionAsync();
 
-      console.log("🚀 SESSION STARTED");
-
-      /* 🎧 AUDIO STREAM */
       startAudioStream((chunk: Uint8Array) => {
-        const safeBuffer = new Uint8Array(chunk).buffer;
-        pushStream.write(safeBuffer);
+        if (pushStreamRef.current) {
+          try {
+            pushStreamRef.current.write(chunk.buffer);
+          } catch (e) {
+            console.log("STREAM WRITE ERROR:", e);
+          }
+        }
       });
+
+      setIsRecording(true);
+
+      timerRef.current = setInterval(() => {
+        setElapsed((t) => t + 1);
+      }, 1000);
     } catch (e) {
       console.log(" START ERROR:", e);
     }
@@ -194,30 +193,33 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
   /* -------------------------- */
 
   async function handleStopRecording() {
+    if (!isRecording) return;
+
     try {
       console.log(" STOP RECORDING");
 
-      if (!transcriptRef.current) return;
+      if (!transcriptRef.current || !consultationIdRef.current) return;
 
       if (timerRef.current) clearInterval(timerRef.current);
 
       setIsRecording(false);
 
-      //  FIX: eerst Azure stoppen
       recognizerRef.current?.stopContinuousRecognitionAsync(() => {
         recognizerRef.current?.close();
       });
 
-      //  daarna audio stream stoppen
       stopAudioStream();
 
-      pushStreamRef.current?.close();
+      try {
+        pushStreamRef.current?.close();
+      } catch {}
 
       await new Promise((r) => setTimeout(r, 500));
 
-      await finalizeTranscript(conversationId, transcriptRef.current.id);
-
-      console.log("✅ FINALIZED");
+      await finalizeTranscript(
+        consultationIdRef.current,
+        transcriptRef.current.id,
+      );
 
       router.replace({
         pathname: `/(app)/interactions/feedback/${conversationId}`,
@@ -244,8 +246,6 @@ export default function RecordingContainer({ conversationId, patient }: Props) {
     router.back();
   }
 
-  /* -------------------------- */
-  /* RENDER */
   /* -------------------------- */
 
   return (

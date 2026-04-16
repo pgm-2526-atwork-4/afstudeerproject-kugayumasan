@@ -3,11 +3,15 @@ import { router } from "expo-router";
 
 import InteractionDetailScreen from "@design/screens/InteractionDetailScreen";
 
-import { getConversation } from "@core/modules/recording/recording.service";
+import {
+  getConversation,
+  getConsultation,
+} from "@core/modules/recording/recording.service";
+
 import { getPatientName } from "@functional/patients/patient.helpers";
 
 import { subscribeToConversation } from "@core/modules/recording/realtime.service";
-import { authService } from "@core/modules/auth/auth.service"; 
+import { authService } from "@core/modules/auth/auth.service";
 
 import type { InteractionCardModel } from "@design/interactions/InteractionCard";
 
@@ -33,16 +37,29 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
     try {
       const conversation = await getConversation(interactionId);
 
+      const consultation = await getConsultation(interactionId);
+
+      /* ---------- TRANSCRIPTS ---------- */
+
       const transcript =
-        conversation.transcripts?.length > 0
-          ? conversation.transcripts
+        consultation && consultation.transcripts.length > 0
+          ? consultation.transcripts
               .map((t, i) => `Opname ${i + 1}\n${t.transcript_text ?? ""}`)
               .join("\n\n---\n\n")
           : "";
 
+      /* ---------- SUMMARY  ---------- */
+
       const summary =
+        consultation?.consultation_notes ??
         conversation.consultation_notes ??
         (conversation.summary ? JSON.stringify(conversation.summary) : "");
+
+      /* ---------- STATUS  ---------- */
+
+      const status = consultation?.consultation_notes
+        ? "Voltooid"
+        : "Verwerking";
 
       setInteraction({
         id: interactionId,
@@ -50,7 +67,7 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
           ? getPatientName(conversation.patient as any)
           : "Anoniem",
         providerName: "Arts",
-        status: summary ? "Voltooid" : "Verwerking",
+        status,
         date: "Vandaag",
         dateLabel: "Vandaag",
         summary,
@@ -90,14 +107,11 @@ export default function InteractionDetailContainer({ interactionId }: Props) {
         const tokens = await authService.getTokens();
         const token = tokens?.accessToken;
 
-        if (!token) {
-          console.log("❌ No token for Pusher");
-          return;
-        }
+        if (!token) return;
 
         unsubscribe = subscribeToConversation(interactionId, token, () => {
-          console.log("✅ SUMMARY READY → refreshing");
-          loadInteraction(); // 🔥 REFRESH
+          console.log("UPDATE → refreshing");
+          loadInteraction();
         });
       } catch (e) {
         console.log("Pusher setup failed", e);

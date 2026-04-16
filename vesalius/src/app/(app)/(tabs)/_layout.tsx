@@ -41,7 +41,7 @@ export default function TabsLayout() {
         />
       )}
     >
-      {/* Hidden default tab screens (we control nav ourselves) */}
+      
       <Tabs.Screen name="home" />
       <Tabs.Screen name="record" />
       <Tabs.Screen name="interactions" />
